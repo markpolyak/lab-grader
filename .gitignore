@@ -1,0 +1,9 @@
+# macOS Files
+.DS_Store
+
+# settings file
+settings.py
+
+# moss data
+moss/
+
