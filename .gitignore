@@ -4,6 +4,7 @@
 # credentials and sensitive information
 settings.py
 credentials.json
+token.pickle
 
 # moss data
 moss/
