@@ -193,16 +193,26 @@ def check_lab(lab_id, groups, data, data_update=[]):
                 google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong TASKID!", data_update=data_update)
             else:
                 # everything looks good, go on and update lab status
+                # calculate grade reduction coefficient
+                reduction_coefficient_str = common.get_grade_reduction_coefficient(log)
+                if reduction_coefficient_str is not None:
+                    grade_reduction_suffix = "*{}".format(reduction_coefficient_str)
+                else:
+                    grade_reduction_suffix = ""
+                # calculate deadline penalty
                 student_dt = isoparse(completion_date)
                 if student_dt > deadlines[student['group']]:
                     overdue = student_dt - deadlines[student['group']]
                     penalty = math.ceil((overdue.days + overdue.seconds / 86400) / 7)
                     # TODO: check that penalty does not exceed maximum grade points for that lab
                     penalty = min(penalty, settings.os_labs[lab_id].get('penalty_max', 0))
-                    suffix = "-{}".format(penalty)
+                    penalty_suffix = "-{}".format(penalty)
                 else:
-                    suffix = ""
-                google_sheets.set_student_lab_status(data, student, lab_id_int, "v{}".format(suffix), data_update=data_update)
+                    penalty_suffix = ""
+                # update status
+                google_sheets.set_student_lab_status(data, student, lab_id_int,
+                                                     "v{}{}".format(grade_reduction_suffix, penalty_suffix),
+                                                     data_update=data_update)
     return data_update
 
 

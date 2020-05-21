@@ -400,6 +400,22 @@ def get_task_id(log):
     return int(log[i:i+2].strip())
 
 
+def get_grade_reduction_coefficient(log):
+    reduction_str = "Grading reduced by"
+    i = log.find(reduction_str)
+    if i < 0:
+        return None
+    i += len(reduction_str) + 1
+    reduction_percent = int(log[i:log.find("%")].strip())
+    if reduction_percent == 0:
+        return None
+    else:
+        # 0.01 * (100 - REDUCTION_PERCENT) = REDUCTION_COEFFICIENT in decimal form
+        # return 0.01 * (100 - reduction_percent) # pure float coefficient
+        # for current case, where percents could be in range [1; 100], using of 'g' format is OK
+        return '{0:g}'.format(0.01 * (100 - reduction_percent))
+
+
 def github_get_file(repo, filepath):
     """
     get a single file from GitHub
