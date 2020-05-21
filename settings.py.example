@@ -17,14 +17,11 @@ mail_login = "k43guap"
 mail_password = "PLACE_YOUR_PASSWORD_HERE"
 mail_return_address = "k43guap@ya.ru"
 
-# gsheet_key_filename = "SUAI-OS-2019-ee72bf6e6075.json"
-# gspreadsheet_name = "Операционные системы 2019 весна"
-gsheet_key_filename = "SUAI-OS-2019-ee72bf6e6075.json"
-gspreadsheet_name = "Операционные системы 2020 весна"
 
-#
-google_clientid = "80760155075-187543d205eqg7527nor2dceubmmp5id.apps.googleusercontent.com"
-google_clientsecret = "PLACE_YOUR_SECRET_HERE"
+# Google
+# google_clientid = "80760155075-187543d205eqg7527nor2dceubmmp5id.apps.googleusercontent.com"
+# google_clientsecret = "PLACE_YOUR_SECRET_HERE"
+google_credentials_file = "credentials.json"
 google_spreadsheet_id = "1ymyU98eB0HYUzVTgrArbtEOkiU3lnKSOS6BUNkssbTE"
 
 # MOSS
