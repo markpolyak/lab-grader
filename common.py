@@ -446,3 +446,58 @@ def github_get_latest_commit_date(repo):
     pushed_at = json.loads(res.content).get("pushed_at")
     return datetime.datetime.fromisoformat(pushed_at.replace("Z", "+00:00"))
 
+def is_student_author_of_commits(repo, student):
+    """
+    checks if the student is the author of commits, excluding teacher commits
+
+    :param repo: repository name (with organization/owner prefix)
+    :param student: dict with a 'github' key
+    :returns: True if student is author of commits, False otherwise
+    """
+    status_headers = {
+        "User-Agent": "GitHubGetCommits/1.0",
+        "Authorization": "token " + settings.github_token,
+        "Accept": "application/vnd.github.v3.raw",
+    }
+    res = requests_retry_session().get(
+        "https://api.github.com/repos/{}/commits".format(repo),
+        headers=status_headers,
+        timeout=settings.requests_timeout
+    )
+    if res.status_code != 200:
+        raise Exception("GitHub API reported an error while trying to get info about repository '{}'! Message is '{}' ({}).".format(repo, res.reason, res.status_code))
+    res_json = json.loads(res.content)
+    for commit in res_json:
+        author = commit["commit"]["author"]["name"]
+        if author not in settings.teacher_github_logins or author != student["github"]:
+            return False
+    return True
+
+def is_student_change_tests(lab_id, repo):
+    """
+    check if the student changed tests
+
+    :param lab_id: number of lab
+    :param repo: repository name (with organization/owner prefix)
+    :returns: True if student changed the tests, False otherwise
+    """
+    for file in settings.os_labs[lab_id]['test_files']:
+        status_headers = {
+            "User-Agent": "GitHubGetCommits/1.0",
+            "Authorization": "token " + settings.github_token,
+            "Accept": "application/vnd.github.v3.raw",
+        }
+        res = requests_retry_session().get(
+            "https://api.github.com/repos/{}/commits?path=tests.sh&path={}".format(repo, file),
+            headers=status_headers,
+            timeout=settings.requests_timeout
+        )
+        if res.status_code != 200:
+            raise Exception("GitHub API reported an error while trying to get info about repository '{}'! Message is '{}' ({}).".format(repo, res.reason, res.status_code))
+        res_json = json.loads(res.content)
+        for commit in res_json:
+            author = commit["commit"]["author"]["name"]
+            print(author)
+            if author not in settings.teacher_github_logins:
+                return True
+    return False
