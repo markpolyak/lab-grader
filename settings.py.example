@@ -27,6 +27,8 @@ google_spreadsheet_id = "1ymyU98eB0HYUzVTgrArbtEOkiU3lnKSOS6BUNkssbTE"
 # MOSS
 moss_userid = None # PLACE YOUR MOSS USER ID HERE
 
+teacher_github_logins = [ "Mark Polyak", "markpolyak" ]
+
 # номер лабораторной работы и количество вариантов
 os_labs = {
     '1': {
@@ -68,6 +70,35 @@ os_labs = {
         'moss': {'language': 'cc', 'max-matches': 100, 'basefiles': [
             {'repo': 'k43guap/os-course-task4', 'filename': 'lab4.cpp'},
         ]},
+    },
+    '5': {
+        'github_prefix': 'os-task5',
+        'repo_requirements': {
+            'commit': {
+                'min_quantity': 3,
+                'grade_percent': 15
+            },
+            'issue': {
+                'min_quantity': 3,
+                'grade_percent': 15
+            }
+        }
+    },
+    '6': {
+        'github_prefix': 'os-task5',
+        'repo_requirements': {
+            'commit': {
+                'min_quantity': 1,
+                'grade_percent': 15,
+                'msg_part': 'Lab6:'
+            },
+            'issue': {
+                'min_quantity': 1,
+                'grade_percent': 15,
+                'prefix': 'Lab6:',
+                'linked_commit_msg_part': 'Lab6:'
+            }
+        }
     }
 }
 

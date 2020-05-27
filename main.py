@@ -168,6 +168,28 @@ def check_lab(lab_id, groups, data, data_update=[]):
         if current_status is not None and not current_status.startswith('?'):
             # this lab is already accounted for, skip it
             continue
+
+        # lab 5 and 6 checking
+        if lab_id in ['5', '6']:
+            grade_coefficient: float = 0.0
+
+            # computing grade coefficient by commits
+            commit_grade_coefficient = common.get_repo_commit_grade_coefficient(repo, lab_id)
+            if commit_grade_coefficient is not None:
+                grade_coefficient += commit_grade_coefficient
+
+            # computing grade coefficient by issues
+            issues_grade_coefficient = common.get_repo_issues_grade_coefficient(repo, lab_id)
+            if issues_grade_coefficient is not None:
+                grade_coefficient += issues_grade_coefficient
+
+            if grade_coefficient > 0.0:
+                google_sheets.set_student_lab_status(data, student, lab_id_int, "?v*{0:g}".format(grade_coefficient),
+                                                     data_update=data_update)
+            else:
+                # calculated coefficient for this lab is zero, skip it
+                continue
+
         # check if tests have passed successfully
         completion_date = None
         log = None
