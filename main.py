@@ -169,8 +169,8 @@ def check_lab(lab_id, groups, data, data_update=[]):
             # this lab is already accounted for, skip it
             continue
 
-        # lab 5 and 6 checking
-        if lab_id in ['5', '6']:
+        # check existence of repo_requirements node for lab_id
+        if "repo_requirements" in settings.os_labs[lab_id]:
             grade_coefficient: float = 0.0
 
             # computing grade coefficient by commits

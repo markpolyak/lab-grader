@@ -519,6 +519,12 @@ def get_task_id(log):
 
 
 def get_grade_reduction_coefficient(log):
+    """
+    get grade reduction coefficient by provided build log
+
+    :param log: build log
+    :return: grade reduction coefficient as str or None
+    """
     reduction_str = "Grading reduced by"
     i = log.find(reduction_str)
     if i < 0:
@@ -537,16 +543,12 @@ def get_grade_reduction_coefficient(log):
 #
 def get_repo_issues_grade_coefficient(repo: str, lab_id: str):
     """
-        get grade coefficient for provided repository and lab id by checking repository issues requirements
+    get grade coefficient for provided repository and lab id by checking repository issues requirements
 
-        :param repo: repository name (with organization/owner prefix)
-        :param lab_id: id of lab
-        :return: None or float coefficient (which can be 0.0)
+    :param repo: repository name (with organization/owner prefix)
+    :param lab_id: id of lab
+    :return: None or float coefficient (which can be 0.0)
     """
-
-    # check existence of repo_requirements node for lab_id
-    if "repo_requirements" not in settings.os_labs[lab_id]:
-        return None
 
     if "issue" not in settings.os_labs[lab_id]['repo_requirements']:
         return None
@@ -629,10 +631,6 @@ def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
     :param lab_id: id of lab
     :return: None or float coefficient (which can be 0.0)
     """
-
-    # check existence of repo_requirements node for lab_id
-    if "repo_requirements" not in settings.os_labs[lab_id]:
-        return None
 
     if "commit" not in settings.os_labs[lab_id]['repo_requirements']:
         return None
