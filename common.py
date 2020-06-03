@@ -298,7 +298,7 @@ def get_github_issues(repo: str):
         "Accept": "application/vnd.github.v3+json",
     }
     res = requests_retry_session().get(
-        "https://api.github.com/repos/{}/issues".format(repo),
+        "https://api.github.com/repos/{}/issues?state=all".format(repo),
         headers=issues_headers,
         timeout=settings.requests_timeout
     )
@@ -525,12 +525,12 @@ def get_grade_reduction_coefficient(log):
     :param log: build log
     :return: grade reduction coefficient as str or None
     """
-    reduction_str = "Grading reduced by"
+    reduction_str = "\nGrading reduced by"
     i = log.find(reduction_str)
     if i < 0:
         return None
     i += len(reduction_str) + 1
-    reduction_percent = int(log[i:log.find("%")].strip())
+    reduction_percent = int(log[i:log.find("%", i)].strip())
     if reduction_percent == 0:
         return None
     else:
