@@ -213,6 +213,12 @@ def check_lab(lab_id, groups, data, data_update=[]):
             # check TASKID from logs
             if common.get_task_id(log) != student_task_id:
                 google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong TASKID!", data_update=data_update)
+            # check is the student is the author of commits
+            elif not common.check_contributors(repo, student):
+                google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong Author!", data_update=data_update)
+            # check if the tests are unchanged
+            elif not common.check_test_unchanged(lab_id, repo):
+                google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Tests modified!", data_update=data_update)
             else:
                 # everything looks good, go on and update lab status
                 # calculate grade reduction coefficient
