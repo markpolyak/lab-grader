@@ -168,6 +168,28 @@ def check_lab(lab_id, groups, data, data_update=[]):
         if current_status is not None and not current_status.startswith('?'):
             # this lab is already accounted for, skip it
             continue
+
+        # check existence of repo_requirements node for lab_id
+        if "repo_requirements" in settings.os_labs[lab_id]:
+            grade_coefficient: float = 0.0
+
+            # computing grade coefficient by commits
+            commit_grade_coefficient = common.get_repo_commit_grade_coefficient(repo, lab_id)
+            if commit_grade_coefficient is not None:
+                grade_coefficient += commit_grade_coefficient
+
+            # computing grade coefficient by issues
+            issues_grade_coefficient = common.get_repo_issues_grade_coefficient(repo, lab_id)
+            if issues_grade_coefficient is not None:
+                grade_coefficient += issues_grade_coefficient
+
+            if grade_coefficient > 0.0:
+                google_sheets.set_student_lab_status(data, student, lab_id_int, "?v*{0:g}".format(grade_coefficient),
+                                                     data_update=data_update)
+            else:
+                # calculated coefficient for this lab is zero, skip it
+                continue
+
         # check if tests have passed successfully
         completion_date = None
         log = None
@@ -193,16 +215,26 @@ def check_lab(lab_id, groups, data, data_update=[]):
                 google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong TASKID!", data_update=data_update)
             else:
                 # everything looks good, go on and update lab status
+                # calculate grade reduction coefficient
+                reduction_coefficient_str = common.get_grade_reduction_coefficient(log)
+                if reduction_coefficient_str is not None:
+                    grade_reduction_suffix = "*{}".format(reduction_coefficient_str)
+                else:
+                    grade_reduction_suffix = ""
+                # calculate deadline penalty
                 student_dt = isoparse(completion_date)
                 if student_dt > deadlines[student['group']]:
                     overdue = student_dt - deadlines[student['group']]
                     penalty = math.ceil((overdue.days + overdue.seconds / 86400) / 7)
                     # TODO: check that penalty does not exceed maximum grade points for that lab
                     penalty = min(penalty, settings.os_labs[lab_id].get('penalty_max', 0))
-                    suffix = "-{}".format(penalty)
+                    penalty_suffix = "-{}".format(penalty)
                 else:
-                    suffix = ""
-                google_sheets.set_student_lab_status(data, student, lab_id_int, "v{}".format(suffix), data_update=data_update)
+                    penalty_suffix = ""
+                # update status
+                google_sheets.set_student_lab_status(data, student, lab_id_int,
+                                                     "v{}{}".format(grade_reduction_suffix, penalty_suffix),
+                                                     data_update=data_update)
     return data_update
 
 

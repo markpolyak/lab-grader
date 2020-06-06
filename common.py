@@ -233,6 +233,124 @@ def get_github_check_runs(repo):
 
 
 #
+def get_github_commits_by_branch(repo: str, branch: str = "master"):
+    """
+    get commit list from GitHub for provided repository and branch
+
+    :param repo: repository name (with organization/owner prefix)
+    :param branch: git branch name (default - "master")
+    :return: list of commits, constructed from response JSON
+    """
+    commits_headers = {
+        "User-Agent": "GitHubCommits/1.0",
+        "Authorization": "token " + settings.github_token,
+        "Accept": "application/vnd.github.v3+json",
+    }
+    res = requests_retry_session().get(
+        "https://api.github.com/repos/{}/commits?sha={}".format(repo, branch),
+        headers=commits_headers,
+        timeout=settings.requests_timeout
+    )
+    if res.status_code != 200:
+        raise Exception(
+            "GitHub API reported an error while trying to get commits for repository '{}' at branch '{}'! Message is '{}' ({}).".format(
+                repo, branch, res.reason, res.status_code))
+    return json.loads(res.content)
+
+
+#
+def get_github_commit_by_sha(repo: str, sha: str):
+    """
+    get commit from GitHub for provided repository and commit sha
+
+    :param repo: repository name (with organization/owner prefix)
+    :param sha: sha of commit
+    :return: commit object, constructed from response JSON
+    """
+    commit_headers = {
+        "User-Agent": "GitHubCommits/1.0",
+        "Authorization": "token " + settings.github_token,
+        "Accept": "application/vnd.github.v3+json",
+    }
+    res = requests_retry_session().get(
+        "https://api.github.com/repos/{}/commits/{}".format(repo, sha),
+        headers=commit_headers,
+        timeout=settings.requests_timeout
+    )
+    if res.status_code != 200:
+        raise Exception(
+            "GitHub API reported an error while trying to get commit for repository '{}' by sha '{}'! Message is '{}' ({}).".format(
+                repo, sha, res.reason, res.status_code))
+    return json.loads(res.content)
+
+
+#
+def get_github_issues(repo: str):
+    """
+    get issues from GitHub for provided repository (exclude pull requests)
+
+    :param repo: repository name (with organization/owner prefix)
+    :return: list of issues, constructed from response JSON
+    """
+    issues_headers = {
+        "User-Agent": "GitHubIssues/1.0",
+        "Authorization": "token " + settings.github_token,
+        "Accept": "application/vnd.github.v3+json",
+    }
+    res = requests_retry_session().get(
+        "https://api.github.com/repos/{}/issues?state=all".format(repo),
+        headers=issues_headers,
+        timeout=settings.requests_timeout
+    )
+    if res.status_code != 200:
+        raise Exception(
+            "GitHub API reported an error while trying to get issues for repository '{}'! Message is '{}' ({}).".format(
+                repo, res.reason, res.status_code))
+    # removing pull requests from issue list
+    return [issue for issue in json.loads(res.content) if 'pull_request' not in issue]
+
+
+#
+def get_github_issue_events(repo: str, issue_number: str):
+    """
+    get issue events from GitHub for provided repository by issue number
+
+    :param repo: repository name (with organization/owner prefix)
+    :param issue_number: number of issue
+    :return: list of issue events, constructed from response JSON
+    """
+    issue_events_headers = {
+        "User-Agent": "GitHubIssueEvents/1.0",
+        "Authorization": "token " + settings.github_token,
+        "Accept": "application/vnd.github.v3+json",
+    }
+    res = requests_retry_session().get(
+        "https://api.github.com/repos/{}/issues/{}/events".format(repo, issue_number),
+        headers=issue_events_headers,
+        timeout=settings.requests_timeout
+    )
+    if res.status_code != 200:
+        raise Exception(
+            "GitHub API reported an error while trying to get issue #{} events for repository '{}'! Message is '{}' ("
+            "{}).".format(
+                issue_number, repo, res.reason, res.status_code))
+    return json.loads(res.content)
+
+
+#
+def get_github_issue_referenced_events(repo: str, issue_number: str):
+    """
+    get issue events with referenced (commit linking) type from GitHub for provided repository by issue number
+
+    :param repo: repository name (with organization/owner prefix)
+    :param issue_number: number of issue
+    :return: list of referenced type issue events, constructed from response JSON
+    """
+    events = get_github_issue_events(repo, issue_number)
+    return [event for event in events if event['event'] == "referenced"]
+
+
+#
 def get_successfull_build_info(repo):
     check_runs = get_github_check_runs(repo)
     # travis_build = None
@@ -398,6 +516,164 @@ def get_task_id(log):
         return None
     i += len("TASKID is") + 1
     return int(log[i:i+2].strip())
+
+
+def get_grade_reduction_coefficient(log):
+    """
+    get grade reduction coefficient by provided build log
+
+    :param log: build log
+    :return: grade reduction coefficient as str or None
+    """
+    reduction_str = "\nGrading reduced by"
+    i = log.find(reduction_str)
+    if i < 0:
+        return None
+    i += len(reduction_str) + 1
+    reduction_percent = int(log[i:log.find("%", i)].strip())
+    if reduction_percent == 0:
+        return None
+    else:
+        # 0.01 * (100 - REDUCTION_PERCENT) = REDUCTION_COEFFICIENT in decimal form
+        # return 0.01 * (100 - reduction_percent) # pure float coefficient
+        # for current case, where percents could be in range [1; 100], using of 'g' format is OK
+        return '{0:g}'.format(0.01 * (100 - reduction_percent))
+
+
+#
+def get_repo_issues_grade_coefficient(repo: str, lab_id: str):
+    """
+    get grade coefficient for provided repository and lab id by checking repository issues requirements
+
+    :param repo: repository name (with organization/owner prefix)
+    :param lab_id: id of lab
+    :return: None or float coefficient (which can be 0.0)
+    """
+
+    if "issue" not in settings.os_labs[lab_id]['repo_requirements']:
+        return None
+
+    # get prefix
+    if "prefix" in settings.os_labs[lab_id]['repo_requirements']['issue']:
+        prefix = settings.os_labs[lab_id]['repo_requirements']['issue']['prefix']
+    else:
+        prefix = None
+
+    # get linked commit message part
+    if "linked_commit_msg_part" in settings.os_labs[lab_id]['repo_requirements']['issue']:
+        linked_commit_msg_part = settings.os_labs[lab_id]['repo_requirements']['issue']['prefix']
+    else:
+        linked_commit_msg_part = None
+
+    # get issues min quantity from settings (mandatory)
+    if "min_quantity" in settings.os_labs[lab_id]['repo_requirements']['issue']:
+        min_quantity = settings.os_labs[lab_id]['repo_requirements']['issue']['min_quantity']
+    else:
+        min_quantity = None
+
+    # get grade percent from settings (mandatory)
+    if "grade_percent" in settings.os_labs[lab_id]['repo_requirements']['issue']:
+        grade_percent = settings.os_labs[lab_id]['repo_requirements']['issue']['grade_percent']
+    else:
+        grade_percent = None
+
+    # check acquired lab settings
+    if grade_percent is None or min_quantity is None:
+        return None
+
+    # get repo issues from github
+    if prefix is None:
+        repo_issues = get_github_issues(repo)
+    else:
+        repo_issues = [issue for issue in get_github_issues(repo) if issue['title'].startswith(prefix)]
+
+    # if issues number less than required quantity -> return 0.0
+    if len(repo_issues) < int(min_quantity):
+        return 0.0
+
+    correct_issue_number: int = 0
+    for repo_issue in repo_issues:
+        # get current issue number
+        current_issue_number: str = str(repo_issue['number'])
+
+        # get referenced (commit) events for current issue with next checks:
+        # 1) event actor's login is not belongs to teacher
+        # 2) "commit_id" field is not empty (contains SHA of the commit)
+        # 3) provided repo name contains in commit URL
+        student_commit_events_for_issue = [event for event in get_github_issue_referenced_events(repo, current_issue_number)
+                                           if event['actor']['login'] not in settings.teacher_github_logins
+                                           and event['commit_id'] is not None
+                                           and repo in event['commit_url']]
+
+        if len(student_commit_events_for_issue) >= 1:
+            if linked_commit_msg_part is not None:
+                linked_commits_sha = [event['commit_id'] for event in student_commit_events_for_issue]
+                linked_commits = [commit for commit in
+                                  [get_github_commit_by_sha(repo, sha) for sha in linked_commits_sha]
+                                  if linked_commit_msg_part in commit['commit']['message']]
+                if len(linked_commits) >= 1:
+                    correct_issue_number += 1
+            else:
+                correct_issue_number += 1
+
+    if correct_issue_number >= int(min_quantity):
+        return float(int(grade_percent) / 100)
+    else:
+        return 0.0
+
+
+#
+def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
+    """
+    get grade coefficient for provided repository and lab id by checking repository commits requirements
+
+    :param repo: repository name (with organization/owner prefix)
+    :param lab_id: id of lab
+    :return: None or float coefficient (which can be 0.0)
+    """
+
+    if "commit" not in settings.os_labs[lab_id]['repo_requirements']:
+        return None
+
+    # get commit message part
+    if "msg_part" in settings.os_labs[lab_id]['repo_requirements']['commit']:
+        msg_part = settings.os_labs[lab_id]['repo_requirements']['commit']['msg_part']
+    else:
+        msg_part = None
+
+    # get issues min quantity from settings
+    if "min_quantity" in settings.os_labs[lab_id]['repo_requirements']['commit']:
+        min_quantity = settings.os_labs[lab_id]['repo_requirements']['commit']['min_quantity']
+    else:
+        min_quantity = None
+
+    # get grade percent
+    if "grade_percent" in settings.os_labs[lab_id]['repo_requirements']['commit']:
+        grade_percent = settings.os_labs[lab_id]['repo_requirements']['commit']['grade_percent']
+    else:
+        grade_percent = None
+
+    # check acquired lab settings
+    if grade_percent is None or min_quantity is None:
+        return None
+
+    # get repo commits from github
+    repo_commits = get_github_commits_by_branch(repo)
+
+    # get commits and removing authored by teacher
+    student_commits = [commit for commit in repo_commits
+                       if commit['author']['login'] not in settings.teacher_github_logins]
+
+    if msg_part is not None:
+        commits_with_prefix = [commit for commit in student_commits if msg_part in commit['commit']['message']]
+        commits_number: int = len(commits_with_prefix)
+    else:
+        commits_number: int = len(student_commits)
+
+    if commits_number >= int(min_quantity):
+        return float(int(grade_percent) / 100)
+    else:
+        return 0.0
 
 
 def github_get_file(repo, filepath):
