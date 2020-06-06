@@ -154,7 +154,10 @@ def check_lab(lab_id, groups, data, data_update=[]):
         if len(deadline_str.split('.')) == 2:
             deadline_str += '.{} 23:59:59 MSK'.format(datetime.datetime.now().year)
         # print(deadline_str)
-        deadlines[group] = parse(deadline_str, dayfirst=True)
+        try:
+            deadlines[group] = parse(deadline_str, dayfirst=True)
+        except ValueError as e:
+            deadlines[group] = None
     for repo in repos:
         github_account = repo.split('/')[1][len(prefix)+1:]
         try:
@@ -201,8 +204,8 @@ def check_lab(lab_id, groups, data, data_update=[]):
             completion_date = common.get_successfull_build_info(repo).get("completed_at")
             if completion_date:
                 log = common.get_travis_log(repo)
-        # check if 
-        if completion_date:
+        # check if tests were completed successfully and tests should not be ignored
+        if completion_date and not settings.os_labs[lab_id].get('ignore_completion_date', False):
             # log = common.get_travis_log(repo)
             # calculate correct TASKID
             student_task_id = int(google_sheets.get_student_task_id(data, student))

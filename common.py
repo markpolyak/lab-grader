@@ -525,12 +525,14 @@ def get_grade_reduction_coefficient(log):
     :param log: build log
     :return: grade reduction coefficient as str or None
     """
-    reduction_str = "Grading reduced by"
+    reduction_str = "\nGrading reduced by"
     i = log.find(reduction_str)
     if i < 0:
         return None
+    # print(log)
+    # print(i)
     i += len(reduction_str) + 1
-    reduction_percent = int(log[i:log.find("%")].strip())
+    reduction_percent = int(log[i:log.find("%", i)].strip())
     if reduction_percent == 0:
         return None
     else:
@@ -604,6 +606,10 @@ def get_repo_issues_grade_coefficient(repo: str, lab_id: str):
                                            if event['actor']['login'] not in settings.teacher_github_logins
                                            and event['commit_id'] is not None
                                            and repo in event['commit_url']]
+        if len(student_commit_events_for_issue) == 0:
+            student_commit_events_for_issue = [
+                
+            ]
 
         if len(student_commit_events_for_issue) >= 1:
             if linked_commit_msg_part is not None:
