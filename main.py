@@ -22,7 +22,7 @@ from mossum import mossum
 
 # setup logging
 def setup_logging(
-    default_path='logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'
+        default_path='logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'
 ):
     if not sys.warnoptions:
         # Route warnings through python logging
@@ -52,7 +52,7 @@ def _parse_args():
         action='store', default='update',
         choices=['update', 'moss'],
         help="action to be taken: "
-        "check for UPDATEs, run MOSS plagiarism check",
+             "check for UPDATEs, run MOSS plagiarism check",
     )
     parser.add_argument(
         '-l', '--labs', dest='labs',
@@ -68,7 +68,7 @@ def _parse_args():
         '--dry-run', dest='dry_run',
         action='store_true',
         help="do not update any real data, do not send any emails "
-        "or save any results, just print to console",
+             "or save any results, just print to console",
     )
     parser.add_argument(
         '--logging-config', dest='logging_config', action='store',
@@ -91,7 +91,8 @@ def update_students(imap_conn, data, data_update=[], dry_run=False):
         try:
             # check if github user exists (e.g. there are no obvious typos)
             if not common.github_user_exists(student['github']):
-                raise ValueError("User '{}' not found on GitHub. Check your spelling or contact course staff.".format(student['github']))
+                raise ValueError("User '{}' not found on GitHub. Check your spelling or contact course staff.".format(
+                    student['github']))
             # Try to set student's github. This will raise an exception if:
             # - group or name are not found (i.e. invalid)
             # - this student already has a github account (changing github
@@ -105,10 +106,10 @@ def update_students(imap_conn, data, data_update=[], dry_run=False):
             print(e)
             email_text = (
                 "{}\n\nGroup: {} (raw: {})\nStudent: {}\nGitHub account: {}".format(
-                    str(e), 
-                    student['group'], 
-                    student['raw_group'], 
-                    student['name'], 
+                    str(e),
+                    student['group'],
+                    student['raw_group'],
+                    student['name'],
                     student['github'],
                 )
             )
@@ -122,7 +123,8 @@ def update_students(imap_conn, data, data_update=[], dry_run=False):
                 # another report to be sent when the script is run next time
                 mailbox.mark_flagged(imap_conn, student['uid'])
             else:
-                print("An email would have been sent to {}. Subject: {}. Text: {}".format(recepients, errmsg, email_text))
+                print(
+                    "An email would have been sent to {}. Subject: {}. Text: {}".format(recepients, errmsg, email_text))
                 # set a message as unseen (unread)
                 mailbox.mark_unread(imap_conn, student['uid'])
         else:
@@ -156,7 +158,7 @@ def check_lab(lab_id, groups, data, data_update=[]):
         # print(deadline_str)
         deadlines[group] = parse(deadline_str, dayfirst=True)
     for repo in repos:
-        github_account = repo.split('/')[1][len(prefix)+1:]
+        github_account = repo.split('/')[1][len(prefix) + 1:]
         try:
             student = google_sheets.find_student_by_github(data, github_account)
         except ValueError as e:
@@ -201,7 +203,7 @@ def check_lab(lab_id, groups, data, data_update=[]):
             completion_date = common.get_successfull_build_info(repo).get("completed_at")
             if completion_date:
                 log = common.get_travis_log(repo)
-        # check if 
+        # check if
         if completion_date:
             # log = common.get_travis_log(repo)
             # calculate correct TASKID
@@ -212,7 +214,8 @@ def check_lab(lab_id, groups, data, data_update=[]):
                 student_task_id = settings.os_labs[lab_id]['taskid_max']
             # check TASKID from logs
             if common.get_task_id(log) != student_task_id:
-                google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong TASKID!", data_update=data_update)
+                google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong TASKID!",
+                                                     data_update=data_update)
             else:
                 # everything looks good, go on and update lab status
                 # calculate grade reduction coefficient
@@ -273,16 +276,16 @@ def check_plagiarism(lab_id, local_path):
             local_filename = basefile
         else:
             raise ValueError("Unknown basefile value type. "
-                "Value '{}' of type '{}' is not supported.".format(
-                    str(basefile), 
-                    type(basefile)
-                )
+                             "Value '{}' of type '{}' is not supported.".format(
+                str(basefile),
+                type(basefile)
+            )
             )
         moss.addBaseFile(local_filename)
     # download specific files from repositories
     file_count = 0
     for repo in repos:
-        github_account = repo.split('/')[1][len(prefix)+1:]
+        github_account = repo.split('/')[1][len(prefix) + 1:]
         for filename in settings.os_labs[lab_id].get('files', []):
             file_contents = common.github_get_file(repo, filename)
             local_dir = os.path.join(
@@ -311,14 +314,14 @@ def check_plagiarism(lab_id, local_path):
             file_count += 1
     print(f"Total {file_count} files were downloaded. Sending them to MOSS...")
     # send data to MOSS server
-    url = moss.send() 
-    print ("Report URL: " + url)
+    url = moss.send()
+    print("Report URL: " + url)
     # Save report file
     submission_path = os.path.join(local_path, "submission")
     os.makedirs(submission_path, exist_ok=True)
     dt = datetime.datetime.now()
     moss.saveWebPage(
-        url, 
+        url,
         os.path.join(submission_path, f"report_{dt:%Y-%m-%d_%H%M%S}.html")
     )
     report_dir = os.path.join(submission_path, f"report_{dt:%Y-%m-%d_%H%M%S}")
@@ -334,9 +337,9 @@ def check_plagiarism(lab_id, local_path):
     # mossum
     # cli: mossum -m -p 10 -l 10 -a -o lab1/moss_$(date +%Y-%m-%d_%H%M%S) http://moss.stanford.edu/results/3/4482533404111
     mossum.args = mossum.parser.parse_args([
-        '-m', '-p', '10', '-l', '10', 
+        '-m', '-p', '10', '-l', '10',
         '-o', os.path.join(
-            local_path, 
+            local_path,
             f'moss_{dt:%Y-%m-%d_%H%M%S}'
         ),
         url
@@ -386,7 +389,9 @@ def main():
             if not params.dry_run:
                 updated_cells = google_sheets.batch_update(gs, data_update)
                 if updated_cells != len(data_update):
-                    raise ValueError("Number of updated cells ({}) differs from expected ({})! Check the data manually. Data update: {}".format(updated_cells, len(data_update), data_update))
+                    raise ValueError(
+                        "Number of updated cells ({}) differs from expected ({})! Check the data manually. Data update: {}".format(
+                            updated_cells, len(data_update), data_update))
         # add all new os-task3 repos to AppVeyor
         # if not params.dry_run:
         #     new_projects = create_appveyor_projects()
@@ -400,7 +405,7 @@ def main():
             projects_msg_part = " was" if projects_count == 1 else "s were"
         print(
             "{} new AppVeyour project{} added: {}".format(
-                projects_count, 
+                projects_count,
                 projects_msg_part,
                 ";".join(new_projects)
             )
@@ -420,7 +425,7 @@ def main():
         #             ";".join(new_projects)
         #         )
         #     )
-        
+
         # close IMAP connections
         try:
             imap_conn.close()
