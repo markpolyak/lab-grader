@@ -71,6 +71,11 @@ def _parse_args():
         "or save any results, just print to console",
     )
     parser.add_argument(
+        '--ignore-email', dest='ignore_email',
+        action='store_true',
+        help="do not check for new emails",
+    )
+    parser.add_argument(
         '--logging-config', dest='logging_config', action='store',
         default=os.path.join(os.path.dirname(os.path.realpath(__file__)),
                              'logging.yaml'),
@@ -364,8 +369,6 @@ def main():
     if params.action == "update":
         # initialization
         data_update = []
-        # connect to IMAP
-        imap_conn = mailbox.get_imap_connection()
         # connect to Google Sheets API
         gs = google_sheets.get_spreadsheet_instance()
         # load data from Google Sheets
@@ -373,8 +376,11 @@ def main():
         # print(sheets)
         sheets = ["'{}'".format(s) for s in sheets]
         data = google_sheets.get_multiple_sheets_data(gs, sheets)
-        # process INBOX and update spreadsheet
-        data_update = update_students(imap_conn, data, data_update=data_update, dry_run=params.dry_run)
+        if not params.ignore_email:
+            # connect to IMAP
+            imap_conn = mailbox.get_imap_connection()
+            # process INBOX and update spreadsheet
+            data_update = update_students(imap_conn, data, data_update=data_update, dry_run=params.dry_run)
         # check labs
         for lab_id in params.labs:
             data_update = check_lab(lab_id, sheets[:-1], data, data_update=data_update)
