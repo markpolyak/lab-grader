@@ -48,11 +48,16 @@ def _parse_args():
         description="Process student updates from email and GitHub")
     # arguments
     parser.add_argument(
+        '-c', '--course-config', dest='course_config', action='store',
+        required=True,
+        help="course config file",
+    )
+    parser.add_argument(
         '-a', '--action', dest='action',
         action='store', default='update',
         choices=['update', 'moss'],
         help="action to be taken: "
-        "check for UPDATEs, run MOSS plagiarism check",
+             "check for UPDATEs, run MOSS plagiarism check",
     )
     parser.add_argument(
         '-l', '--labs', dest='labs',
@@ -68,7 +73,7 @@ def _parse_args():
         '--dry-run', dest='dry_run',
         action='store_true',
         help="do not update any real data, do not send any emails "
-        "or save any results, just print to console",
+             "or save any results, just print to console",
     )
     parser.add_argument(
         '--ignore-email', dest='ignore_email',
@@ -84,12 +89,12 @@ def _parse_args():
     return parser.parse_args()
 
 
-def update_students(imap_conn, data, data_update=[], dry_run=False):
+def update_students(imap_conn, data, data_update=[], dry_run=False, valid_subjects=[], return_address=''):
     """
     """
     # read all new letters in mailbox and extract student info
     print("Processing mailbox...\n")
-    students = mailbox.process_students(imap_conn)
+    students = mailbox.process_students(imap_conn, valid_subjects)
     print(students)
     # validate student info and add to data
     for student in students:
@@ -119,7 +124,7 @@ def update_students(imap_conn, data, data_update=[], dry_run=False):
             )
             # set a message as unseen (unread)
             # mailbox.mark_unread(imap_conn, student['uid'])
-            recepients = [student['email'], settings.mail_return_address]
+            recepients = [student['email'], return_address]
             if not dry_run:
                 # send a report
                 mailbox.send_email(recepients, errmsg, email_text)
@@ -362,25 +367,33 @@ def main():
     # enable logging
     setup_logging(params.logging_config)
     logger = logging.getLogger(__name__)
+    # load course description
+    with open(params.course_config) as f:
+        config = yaml.load(f, Loader=yaml.SafeLoader)
     # check arguments
     if params.labs == 'all' or params.labs == '*':
-        params.labs = settings.os_labs.keys()
+        params.labs = config['course']['labs'].keys()
     # perform action
     if params.action == "update":
         # initialization
         data_update = []
         # connect to Google Sheets API
-        gs = google_sheets.get_spreadsheet_instance()
+        gs = google_sheets.get_spreadsheet_instance(config)
         # load data from Google Sheets
-        sheets = google_sheets.get_sheet_names(gs)
+        sheets = google_sheets.get_sheet_names(gs, config)
         # print(sheets)
         sheets = ["'{}'".format(s) for s in sheets]
-        data = google_sheets.get_multiple_sheets_data(gs, sheets)
+        data = google_sheets.get_multiple_sheets_data(gs, sheets, config)
         if not params.ignore_email:
             # connect to IMAP
-            imap_conn = mailbox.get_imap_connection()
+            imap_conn = mailbox.get_imap_connection(config)
             # process INBOX and update spreadsheet
-            data_update = update_students(imap_conn, data, data_update=data_update, dry_run=params.dry_run)
+            data_update = update_students(
+                imap_conn, data, 
+                data_update=data_update, 
+                dry_run=params.dry_run,
+                valid_subjects=([config['course']['name']] + config['course']['alt-names']),
+                return_address=config['course']['email'])
         # check labs
         for lab_id in params.labs:
             data_update = check_lab(lab_id, sheets[:-1], data, data_update=data_update)
@@ -393,7 +406,7 @@ def main():
             })
             print(data_update)
             if not params.dry_run:
-                updated_cells = google_sheets.batch_update(gs, data_update)
+                updated_cells = google_sheets.batch_update(gs, data_update, config)
                 if updated_cells != len(data_update):
                     raise ValueError("Number of updated cells ({}) differs from expected ({})! Check the data manually. Data update: {}".format(updated_cells, len(data_update), data_update))
         # add all new os-task3 repos to AppVeyor
