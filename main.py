@@ -55,10 +55,14 @@ def _parse_args():
     )
     parser.add_argument(
         '-a', '--action', dest='action',
-        action='store', default='update',
-        choices=['update', 'moss'],
+        action='store', default=['update'],
+        choices=['update', 'email', 'labs', 'appveyor', 'moss'],
+        nargs='+',
         help="action to be taken: "
-             "check for UPDATEs, run MOSS plagiarism check",
+             "perform all UPDATEs, read EMAILs only, check LABs only, "
+             "add new APPVEYOR projects only, run MOSS plagiarism check;\n"
+             "use a combination of flags, e.g. 'email labs' to read emails "
+             "and check labs, without doing other updates",
     )
     parser.add_argument(
         '-l', '--labs', dest='labs',
@@ -76,11 +80,11 @@ def _parse_args():
         help="do not update any real data, do not send any emails "
              "or save any results, just print to console",
     )
-    parser.add_argument(
-        '--ignore-email', dest='ignore_email',
-        action='store_true',
-        help="do not check for new emails",
-    )
+    # parser.add_argument(
+    #     '--ignore-email', dest='ignore_email',
+    #     action='store_true',
+    #     help="do not check for new emails",
+    # )
     parser.add_argument(
         '--logging-config', dest='logging_config', action='store',
         default=os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -90,7 +94,10 @@ def _parse_args():
     return parser.parse_args()
 
 
-def update_students(imap_conn, data, data_update=[], dry_run=False, valid_subjects=[], return_address=''):
+def update_students(
+    imap_conn, data, data_update=[], dry_run=False,
+    valid_subjects=[], email_config={}, return_address=''
+):
     """
     """
     # read all new letters in mailbox and extract student info
@@ -120,10 +127,10 @@ def update_students(imap_conn, data, data_update=[], dry_run=False, valid_subjec
             print(e)
             email_text = (
                 "{}\n\nGroup: {} (raw: {})\nStudent: {}\nGitHub account: {}".format(
-                    str(e), 
-                    student['group'], 
-                    student['raw_group'], 
-                    student['name'], 
+                    str(e),
+                    student['group'],
+                    student['raw_group'],
+                    student['name'],
                     student['github'],
                 )
             )
@@ -132,7 +139,7 @@ def update_students(imap_conn, data, data_update=[], dry_run=False, valid_subjec
             recepients = [student['email'], return_address]
             if not dry_run:
                 # send a report
-                mailbox.send_email(recepients, errmsg, email_text)
+                mailbox.send_email(recepients, errmsg, email_text, email_config)
                 # flag the message, but leave it as read since we don't want
                 # another report to be sent when the script is run next time
                 mailbox.mark_flagged(imap_conn, student['uid'])
@@ -171,7 +178,7 @@ def check_lab(lab_id, groups, data, data_update=[]):
         # print(deadline_str)
         try:
             deadlines[group] = parse(deadline_str, dayfirst=True)
-        except ValueError as e:
+        except ValueError:  # as e
             deadlines[group] = None
     for repo in repos:
         github_account = repo.split('/')[1][len(prefix)+1:]
@@ -290,9 +297,10 @@ def check_plagiarism(lab_id, local_path):
         elif isinstance(basefile, str):
             local_filename = basefile
         else:
-            raise ValueError("Unknown basefile value type. "
+            raise ValueError(
+                "Unknown basefile value type. "
                 "Value '{}' of type '{}' is not supported.".format(
-                    str(basefile), 
+                    str(basefile),
                     type(basefile)
                 )
             )
@@ -329,14 +337,14 @@ def check_plagiarism(lab_id, local_path):
             file_count += 1
     print(f"Total {file_count} files were downloaded. Sending them to MOSS...")
     # send data to MOSS server
-    url = moss.send() 
-    print ("Report URL: " + url)
+    url = moss.send()
+    print("Report URL: " + url)
     # Save report file
     submission_path = os.path.join(local_path, "submission")
     os.makedirs(submission_path, exist_ok=True)
     dt = datetime.datetime.now()
     moss.saveWebPage(
-        url, 
+        url,
         os.path.join(submission_path, f"report_{dt:%Y-%m-%d_%H%M%S}.html")
     )
     report_dir = os.path.join(submission_path, f"report_{dt:%Y-%m-%d_%H%M%S}")
@@ -350,11 +358,11 @@ def check_plagiarism(lab_id, local_path):
         # f.write(f"{url}\n")
         print(url, file=f)
     # mossum
-    # cli: mossum -m -p 10 -l 10 -a -o lab1/moss_$(date +%Y-%m-%d_%H%M%S) http://moss.stanford.edu/results/3/4482533404111
+    # cli: mossum -m -p 10 -l 10 -a -o lab1/moss_$(date +%Y-%m-%d_%H%M%S) http://moss.stanford.edu/results/3/4482533404111 # noqa
     mossum.args = mossum.parser.parse_args([
-        '-m', '-p', '10', '-l', '10', 
+        '-m', '-p', '10', '-l', '10',
         '-o', os.path.join(
-            local_path, 
+            local_path,
             f'moss_{dt:%Y-%m-%d_%H%M%S}'
         ),
         url
@@ -378,8 +386,9 @@ def main():
     # check arguments
     if params.labs == 'all' or params.labs == '*':
         params.labs = config['course']['labs'].keys()
+    logger.info(params)
     # perform action
-    if params.action == "update":
+    if "moss" not in params.action:
         # initialization
         data_update = []
         # connect to Google Sheets API
@@ -389,72 +398,60 @@ def main():
         # print(sheets)
         sheets = ["'{}'".format(s) for s in sheets]
         data = google_sheets.get_multiple_sheets_data(gs, sheets, config)
-        if not params.ignore_email:
+        # check email
+        if "update" in params.action or "email" in params.action:
             # connect to IMAP
             imap_conn = mailbox.get_imap_connection(config)
             # process INBOX and update spreadsheet
             data_update = update_students(
-                imap_conn, data, 
-                data_update=data_update, 
+                imap_conn, data,
+                data_update=data_update,
                 dry_run=params.dry_run,
-                valid_subjects=([config['course']['name']] + config['course']['alt-names']),
+                valid_subjects=(
+                    [config['course']['name']]
+                    + config['course']['alt-names']),
+                email_config=config['auth']['email'],
                 return_address=config['course']['email'])
         # check labs
-        for lab_id in params.labs:
-            data_update = check_lab(lab_id, sheets[:-1], data, data_update=data_update)
+        if "update" in params.action or "labs" in params.action:
+            for lab_id in params.labs:
+                data_update = check_lab(
+                    lab_id, sheets[:-1], data, data_update=data_update)
         # update Google SpreadSheet
         if len(data_update) > 0:
+            info_sheet = config['course']['google']['info-sheet']
             data_update.append({
-                'range': "'План'!B1",
+                'range': f"'{info_sheet}'!B1",
                 # 'majorDimension': dimension,
                 'values': [[datetime.datetime.now().isoformat()]]
             })
             print(data_update)
             if not params.dry_run:
-                updated_cells = google_sheets.batch_update(gs, data_update, config)
+                updated_cells = google_sheets.batch_update(
+                    gs, data_update, config)
                 if updated_cells != len(data_update):
-                    raise ValueError("Number of updated cells ({}) differs from expected ({})! Check the data manually. Data update: {}".format(updated_cells, len(data_update), data_update))
-        # add all new os-task3 repos to AppVeyor
-        # if not params.dry_run:
-        #     new_projects = create_appveyor_projects()
-        #     print("{} new AppVeyour projects were added".format(len(new_projects)))
-        new_projects = create_appveyor_projects(params.dry_run)
-        projects_count = len(new_projects)
-        if params.dry_run:
-            projects_msg_part = "" if projects_count == 1 else "s"
-            projects_msg_part += " would have been"
-        else:
-            projects_msg_part = " was" if projects_count == 1 else "s were"
-        print(
-            "{} new AppVeyour project{} added: {}".format(
-                projects_count, 
-                projects_msg_part,
-                ";".join(new_projects)
-            )
-        )
-        # if params.dry_run:
-        #     print(
-        #         "{} new AppVeyour projects would have been added: {}.".format(
-        #             len(new_projects),
-        #             ";".join(new_projects)
-        #         )
-        #     )
-        # else:
-        #     print(
-        #         "{} new AppVeyour project{} added: {}".format(
-        #             projects_count,
-        #             " was" if projects_count == 1 else "s were",
-        #             ";".join(new_projects)
-        #         )
-        #     )
-        
+                    raise ValueError(
+                        f"Number of updated cells ({updated_cells}) differs "
+                        "from expected ({len(data_update)})! Check the data "
+                        "manually. Data update: {data_update}")
+        # add all new repos to AppVeyor
+        if "update" in params.action or "appveyor" in params.action:
+            new_projects = create_appveyor_projects(params.dry_run)
+            projects_count = len(new_projects)
+            if params.dry_run:
+                projects_msg_part = "" if projects_count == 1 else "s"
+                projects_msg_part += " would have been"
+            else:
+                projects_msg_part = " was" if projects_count == 1 else "s were"
+            print(f"{projects_count} new AppVeyour project{projects_msg_part} "
+                  "added: {';'.join(new_projects)}")
         # close IMAP connections
         try:
             imap_conn.close()
             imap_conn.logout()
-        except:
+        except Exception:
             pass
-    elif params.action == "moss":
+    elif "moss" in params.action:
         # check labs
         for lab_id in params.labs:
             check_plagiarism(lab_id, "lab{}".format(lab_id))

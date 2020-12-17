@@ -231,7 +231,7 @@ def mark_flagged(imap_connection, uid):
 # M.logout()
 
 
-def send_email(toaddrs, subject, message, config):
+def send_email(toaddrs, subject, message, email_config):
     """
     send an email
 
@@ -242,21 +242,21 @@ def send_email(toaddrs, subject, message, config):
     """
     server = smtplib.SMTP_SSL(
         # settings.mail_smtp_server, settings.mail_smtp_port
-        config['auth']['email']['smtp']['server'],
-        config['auth']['email']['smtp']['port']
+        email_config['smtp']['server'],
+        email_config['smtp']['port']
     )
     server.ehlo()
     server.login(
         # settings.mail_login, settings.mail_password
-        config['auth']['email']['login'],
-        config['auth']['email']['password']
+        email_config['login'],
+        email_config['password']
     )
     # server.sendmail(
     #     'k43guap@ya.ru', 'k43guap@ya.ru',
     #     'From: k43guap@ya.ru\nTo:k43guap@ya.ru\n'
     #     'Subject: test\n\nHello, world!')
     msg = EmailMessage()
-    msg['From'] = config['auth']['email']['return-address']
+    msg['From'] = email_config['return-address']
     msg['To'] = ','.join(toaddrs)
     msg['Subject'] = subject
     msg.set_content(message)
