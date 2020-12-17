@@ -95,8 +95,13 @@ def github_user_exists(username):
     :returns: True if user exists, False otherwise
     """
     # https://api.github.com/search/users?q=user:username
+    request_headers = {
+        "User-Agent": "GitHubUserValidator/1.0",
+        "Authorization": "token " + settings.github_token,
+    }
     res = requests_retry_session().get(
         'https://api.github.com/search/users?q=user:{}'.format(username),
+        headers=request_headers,
         timeout=settings.requests_timeout
     )
     if res.status_code != 200:
