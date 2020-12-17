@@ -12,6 +12,7 @@ import logging.config
 import yaml
 import sys
 import os
+import time
 import argparse
 
 import collections
@@ -99,6 +100,10 @@ def update_students(imap_conn, data, data_update=[], dry_run=False, valid_subjec
     # validate student info and add to data
     for student in students:
         try:
+            # GitHub API has a rate limit of 10 queries per minute for
+            # unauthenticated users and 30 queries per minute for auth users,
+            # see https://docs.github.com/en/free-pro-team@latest/rest/reference/search#rate-limit # noqa
+            time.sleep(2.1)
             # check if github user exists (e.g. there are no obvious typos)
             if not common.github_user_exists(student['github']):
                 raise ValueError("User '{}' not found on GitHub. Check your spelling or contact course staff.".format(student['github']))
