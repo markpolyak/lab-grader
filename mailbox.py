@@ -99,12 +99,13 @@ def process_students(imap_conn, valid_subjects):
         # hdr = email.header.make_header(
         #     email.header.decode_header(msg['Subject']))
         # subject = str(hdr)
-        subject = msg['subject']
+        subject = msg['subject'].strip()
         print('Message {}: {}'.format(uid, subject))
         print('Raw Date: {}'.format(msg['Date']))
         # if subject == 'Кафедра':
         if subject not in valid_subjects:
-            # mark_unread(imap_conn, uid)
+            mark_unread(imap_conn, uid)
+            print("Subject not matched. This email is ignored and left unread\n")
             continue
         # Now convert to local date-time
         date_tuple = email.utils.parsedate_tz(msg['Date'])
