@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import mailbox
-import google_sheets
 import common
 import settings
 import datetime
@@ -18,7 +17,7 @@ import collections
 
 import mosspy
 from mossum import mossum
-
+from google_sheets import StudentGoogleSheet
 
 # setup logging
 def setup_logging(
@@ -152,7 +151,9 @@ def check_lab(lab_id, groups, data, data_update=[]):
     deadlines = {}
     lab_id_int = int(lab_id)
     for group in groups:
-        deadline_str = google_sheets.get_lab_deadline(data, group, lab_id_int)
+
+        deadline_str = StudentGoogleSheet.get_lab_deadline(data, group, lab_id_int)
+
         if len(deadline_str.split('.')) == 2:
             deadline_str += '.{} 23:59:59 MSK'.format(datetime.datetime.now().year)
         # print(deadline_str)
@@ -160,13 +161,13 @@ def check_lab(lab_id, groups, data, data_update=[]):
     for repo in repos:
         github_account = repo.split('/')[1][len(prefix) + 1:]
         try:
-            student = google_sheets.find_student_by_github(data, github_account)
+            StudentInstance = StudentGoogleSheet(github_account)
         except ValueError as e:
             # student not found, probably he/she forgot to send a letter with GitHub account info
             print(e)
             continue
         # check if this lab is already accounted for
-        current_status = google_sheets.get_student_lab_status(data, student, lab_id_int)
+        current_status = StudentInstance.get_student_lab_status(lab_id_int)
         if current_status is not None and not current_status.startswith('?'):
             # this lab is already accounted for, skip it
             continue
@@ -186,8 +187,8 @@ def check_lab(lab_id, groups, data, data_update=[]):
                 grade_coefficient += issues_grade_coefficient
 
             if grade_coefficient > 0.0:
-                google_sheets.set_student_lab_status(data, student, lab_id_int, "?v*{0:g}".format(grade_coefficient),
-                                                     data_update=data_update)
+                StudentInstance.set_student_lab_status(lab_id=lab_id_int, value="?v*{0:g}".format(grade_coefficient),
+                                                       data_update=data_update)
             else:
                 # calculated coefficient for this lab is zero, skip it
                 continue
@@ -207,15 +208,15 @@ def check_lab(lab_id, groups, data, data_update=[]):
         if completion_date:
             # log = common.get_travis_log(repo)
             # calculate correct TASKID
-            student_task_id = int(google_sheets.get_student_task_id(data, student))
+            student_task_id = int(StudentInstance.get_student_task_id())
             student_task_id += settings.os_labs[lab_id].get('taskid_shift', 0)
             student_task_id = student_task_id % settings.os_labs[lab_id]['taskid_max']
             if student_task_id == 0:
                 student_task_id = settings.os_labs[lab_id]['taskid_max']
             # check TASKID from logs
             if common.get_task_id(log) != student_task_id:
-                google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong TASKID!",
-                                                     data_update=data_update)
+                StudentInstance.set_student_lab_status(lab_id_int, "?! Wrong TASKID!",
+                                                       data_update=data_update)
             else:
                 # everything looks good, go on and update lab status
                 # calculate grade reduction coefficient
@@ -226,8 +227,8 @@ def check_lab(lab_id, groups, data, data_update=[]):
                     grade_reduction_suffix = ""
                 # calculate deadline penalty
                 student_dt = isoparse(completion_date)
-                if student_dt > deadlines[student['group']]:
-                    overdue = student_dt - deadlines[student['group']]
+                if student_dt > deadlines[StudentInstance.student['group']]:
+                    overdue = student_dt - deadlines[StudentInstance.student['group']]
                     penalty = math.ceil((overdue.days + overdue.seconds / 86400) / 7)
                     # TODO: check that penalty does not exceed maximum grade points for that lab
                     penalty = min(penalty, settings.os_labs[lab_id].get('penalty_max', 0))
@@ -235,9 +236,9 @@ def check_lab(lab_id, groups, data, data_update=[]):
                 else:
                     penalty_suffix = ""
                 # update status
-                google_sheets.set_student_lab_status(data, student, lab_id_int,
-                                                     "v{}{}".format(grade_reduction_suffix, penalty_suffix),
-                                                     data_update=data_update)
+                StudentInstance.set_student_lab_status(lab_id_int,
+                                                       "v{}{}".format(grade_reduction_suffix, penalty_suffix),
+                                                       data_update=data_update)
     return data_update
 
 
@@ -366,18 +367,15 @@ def main():
         data_update = []
         # connect to IMAP
         imap_conn = mailbox.get_imap_connection()
-        # connect to Google Sheets API
-        gs = google_sheets.get_spreadsheet_instance()
-        # load data from Google Sheets
-        sheets = google_sheets.get_sheet_names(gs)
-        # print(sheets)
-        sheets = ["'{}'".format(s) for s in sheets]
-        data = google_sheets.get_multiple_sheets_data(gs, sheets)
+
+        StudentGoogleSheet.spreadsheet_connect()
+
+
         # process INBOX and update spreadsheet
-        data_update = update_students(imap_conn, data, data_update=data_update, dry_run=params.dry_run)
+        data_update = update_students(imap_conn, StudentGoogleSheet.data, data_update=data_update, dry_run=params.dry_run)
         # check labs
         for lab_id in params.labs:
-            data_update = check_lab(lab_id, sheets[:-1], data, data_update=data_update)
+            data_update = check_lab(lab_id, StudentGoogleSheet.sheets[:-1], StudentGoogleSheet.data, data_update=data_update)
         # update Google SpreadSheet
         if len(data_update) > 0:
             data_update.append({
@@ -387,7 +385,7 @@ def main():
             })
             print(data_update)
             if not params.dry_run:
-                updated_cells = google_sheets.batch_update(gs, data_update)
+                updated_cells = StudentGoogleSheet.batch_update(data_update)
                 if updated_cells != len(data_update):
                     raise ValueError(
                         "Number of updated cells ({}) differs from expected ({})! Check the data manually. Data update: {}".format(

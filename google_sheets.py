@@ -22,8 +22,8 @@ class StudentGoogleSheet:
     STUDENT_NAME_COLUMN = 1
     LAB_COLUMN_OFFSET = 1
 
-    def __init__(self, student=None):
-        self.student = student
+    def __init__(self, github_account):
+        self.student = self.__find_student_by_github(github_account)
         self.exemplars.append(self)
 
     @staticmethod
@@ -301,7 +301,7 @@ class StudentGoogleSheet:
                     student))
         return position
 
-    def find_student_by_github(self, github, dimension='COLUMNS'):
+    def __find_student_by_github(self, github, dimension='COLUMNS'):
         """
         Search for a student in all groups by his/her github
 
@@ -391,7 +391,8 @@ class StudentGoogleSheet:
             student_lab_status = None
         return student_lab_status
 
-    def get_lab_deadline(self, group, lab_id, dimension='COLUMNS'):
+    @classmethod
+    def get_lab_deadline(cls, group, lab_id, dimension='COLUMNS'):
         """
         Get deadline for a lab
 
@@ -404,8 +405,8 @@ class StudentGoogleSheet:
         if dimension != 'COLUMNS':
             raise ValueError("Not implemented! Only 'COLUMNS' dimension value is supported at the moment.")
         try:
-            lab_column = self.LAB_COLUMN_OFFSET + lab_id
-            lab_deadline = self.data[group][lab_column][0]
+            lab_column = cls.LAB_COLUMN_OFFSET + lab_id
+            lab_deadline = cls.data[group][lab_column][0]
         except IndexError:
             lab_deadline = None
         return lab_deadline
