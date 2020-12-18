@@ -143,7 +143,7 @@ def create_appveyor_projects(dry_run):
     return new_projects
 
 
-def check_lab(lab_id, groups, data, data_update=[]):
+def check_lab(lab_id, groups, data_update=[]):
     """
     """
     prefix = settings.os_labs[lab_id]['github_prefix']
@@ -152,7 +152,7 @@ def check_lab(lab_id, groups, data, data_update=[]):
     lab_id_int = int(lab_id)
     for group in groups:
 
-        deadline_str = StudentGoogleSheet.get_lab_deadline(data, group, lab_id_int)
+        deadline_str = StudentGoogleSheet.get_lab_deadline(group, lab_id_int)
 
         if len(deadline_str.split('.')) == 2:
             deadline_str += '.{} 23:59:59 MSK'.format(datetime.datetime.now().year)
@@ -375,7 +375,7 @@ def main():
         data_update = update_students(imap_conn, StudentGoogleSheet.data, data_update=data_update, dry_run=params.dry_run)
         # check labs
         for lab_id in params.labs:
-            data_update = check_lab(lab_id, StudentGoogleSheet.sheets[:-1], StudentGoogleSheet.data, data_update=data_update)
+            data_update = check_lab(lab_id, StudentGoogleSheet.sheets[:-1], data_update=data_update)
         # update Google SpreadSheet
         if len(data_update) > 0:
             data_update.append({
