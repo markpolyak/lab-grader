@@ -12,3 +12,6 @@ RD /s/q "ms-task1-BatMaxim"
 cd ..
 pause
 python main.py
+pause
+cd Tests
+ClearingTheRepository.bat
