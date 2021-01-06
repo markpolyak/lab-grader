@@ -457,6 +457,8 @@ def main():
         raise
     else:
         config.update(course_config)
+    if not config.get('auth'):
+        raise ValueError("No authentication data found in course config and auth config files")
     # check arguments
     if params.labs == 'all' or params.labs == '*':
         params.labs = config['course']['labs'].keys()

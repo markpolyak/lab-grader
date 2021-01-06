@@ -1,0 +1,79 @@
+---
+# Configuration file for lab-grader
+
+course:
+    name: Mathematical software
+    alt-names: 
+        - MS
+        - Математические пакеты программ
+        - МПП   
+    semester: Fall 2020
+    email: k43guap@ya.ru
+    github:
+        organization: suai-ms-2020
+        teachers:
+            - "Mark Polyak"
+            - markpolyak
+    google:
+        spreadsheet: 1LQ3o-03HVMvO9fVgFyiapjrnDNppuDfACbkhAOlcZgQ
+        info-sheet: График
+    labs:
+        "1":
+            github-prefix: ms-task1
+            taskid-max: 30
+            penalty-max: 12
+            ignore-task-id: True
+            ci:
+                - workflows
+            files:
+                - lab1.1.py
+                - lab1.2.m
+                - lab1.3.m
+                - lab1_1.py
+                - lab1_2.m
+                - lab1_3.m
+            moss:
+                checks:
+                    part1:
+                        files:
+                            - lab1.1.py
+                            - lab1_1.py
+                        language: python
+                    part2:
+                        files:
+                            - lab1.2.m
+                            - lab1_2.m
+                        language: matlab
+                    part3:
+                        files:
+                            - lab1.3.m
+                            - lab1_3.m
+                        language: matlab
+                language: matlab
+        "2":
+            github-prefix: ms-task2
+            taskid-max: 30
+            penalty-max: 12
+            ci:
+                - workflows
+            files:
+                # - lab2.m
+                - lab2.py
+            moss:
+                language: python
+                # language: matlab
+        "3":
+            github-prefix: ms-task3
+            taskid-max: 30
+            penalty-max: 14
+            ci:
+                - workflows
+            files:
+                - lab3.py
+            moss:
+                language: python
+
+misc:
+    requests-timeout: 5
+    
+    
