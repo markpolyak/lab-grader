@@ -17,6 +17,22 @@ STUDENT_NAME_COLUMN = 1
 LAB_COLUMN_OFFSET = 1
 
 
+# class StudentGoogleSheet:
+#     spreadsheet = None
+#     exemplars = []
+#     sheets = None
+#     data = None
+#     connected = False
+#     # some predefined constants that describe data structure
+#     # need to move it out to settings
+#     STUDENT_NAME_COLUMN = 1
+#     LAB_COLUMN_OFFSET = 1
+#
+#     def __init__(self, student=None):
+#         self.student = student
+#         self.exemplars.append(self)
+
+
 def colnum_string(n, zero_based=False):
     string = ""
     if zero_based:

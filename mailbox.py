@@ -1,3 +1,4 @@
+import logging
 import sys
 import imaplib
 import smtplib
@@ -43,6 +44,7 @@ def get_imap_connection(config):
     :param config: a course config
     :returns: connection instance
     """
+    logger = logging.getLogger(__name__)
     connection = imaplib.IMAP4_SSL(
         # settings.mail_imap_server,
         # str(settings.mail_imap_port)
@@ -56,13 +58,16 @@ def get_imap_connection(config):
             config['auth']['email']['password']
         )
     except imaplib.IMAP4.error:
-        print("LOGIN FAILED!!!")
+        logger.critical("Login failed!!!")
+        # print("LOGIN FAILED!!!")
         sys.exit(1)
-    print(rv, data)
+    # print(rv, data)
+    logger.info("IMAP login result: %s %s", rv, data)
     rv, mailboxes = connection.list()
     if rv == 'OK':
-        print("Mailboxes:")
-        print(mailboxes)
+        logger.debug("Mailboxes: %s", mailboxes)
+        # print("Mailboxes:")
+        # print(mailboxes)
     return connection
 
 
@@ -71,15 +76,18 @@ def process_students(imap_conn, valid_subjects):
     Do something with emails messages in the folder.
     For the sake of this example, print some headers.
     """
+    logger = logging.getLogger(__name__)
     rv, data = imap_conn.select("INBOX")
     if rv != 'OK':
-        print("ERROR: Unable to open mailbox ", rv)
+        # print("ERROR: Unable to open mailbox ", rv)
+        logger.critical("ERROR: Unable to open mailbox %s", rv)
 
     # rv, data = M.search(None, "ALL")
     # rv, data = M.uid('search', None, "ALL")
     rv, data = imap_conn.uid('search', None, "(UNSEEN)")
     if rv != 'OK':
-        print("No messages found!")
+        # print("No messages found!")
+        logger.info("No messages found!")
         return
 
     # list of students
@@ -89,7 +97,8 @@ def process_students(imap_conn, valid_subjects):
         # rv, data = M.fetch(num, '(RFC822)')
         rv, data = imap_conn.uid('fetch', uid, '(RFC822)')
         if rv != 'OK':
-            print("ERROR getting message {}".format(uid))
+            # print("ERROR getting message {}".format(uid))
+            logger.error("ERROR getting message %s", uid)
             return
 
         # see https://docs.python.org/3/library/email.examples.html
@@ -99,13 +108,16 @@ def process_students(imap_conn, valid_subjects):
         # hdr = email.header.make_header(
         #     email.header.decode_header(msg['Subject']))
         # subject = str(hdr)
-        subject = msg['subject'].strip()
-        print('Message {}: {}'.format(uid, subject))
-        print('Raw Date: {}'.format(msg['Date']))
+        subject = msg['subject'].strip() if msg['subject'] is not None else ''
+        # print('Message {}: {}'.format(uid, subject))
+        # print('Raw Date: {}'.format(msg['Date']))
+        logger.debug('Message %s: %s', uid, subject)
+        logger.debug('Raw Date: %s', msg['Date'])
         # if subject == 'Кафедра':
         if subject not in valid_subjects:
             mark_unread(imap_conn, uid)
-            print("Subject not matched. This email is ignored and left unread\n")
+            # print("Subject not matched. This email is ignored and left unread\n")
+            logger.debug("Subject not matched. This email is ignored and left unread\n")
             continue
         # Now convert to local date-time
         date_tuple = email.utils.parsedate_tz(msg['Date'])
@@ -148,9 +160,12 @@ def process_students(imap_conn, valid_subjects):
             text = '\n'.join(text_chunks)
             # print(text)
             if len(text_chunks) >= 3:
-                print("Group: {}".format(text_chunks[0]))
-                print("Name: {}".format(text_chunks[1]))
-                print("Repo name: {}".format(text_chunks[2]))
+                # print("Group: {}".format(text_chunks[0]))
+                # print("Name: {}".format(text_chunks[1]))
+                # print("Repo name: {}".format(text_chunks[2]))
+                logger.debug("Group: %s", text_chunks[0])
+                logger.debug("Name: %s", text_chunks[1])
+                logger.debug("Repo name: %s", text_chunks[2])
                 # make uppercase and
                 # swap all valid non-numeric characters to english
                 group = (text_chunks[0]
@@ -174,11 +189,12 @@ def process_students(imap_conn, valid_subjects):
                     'uid': uid
                 })
             else:
-                print(
+                # print(
+                logger.error(
                     "Error! Unable to parse email body. "
                     "There should be at least 3 lines of text in the email.")
         # print(msg.keys())
-        print("")
+        # print("")
     return students
 
 

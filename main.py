@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import logging
+import logging.config
 import mailbox
 import google_sheets
 import common
@@ -7,8 +9,6 @@ import settings
 import datetime
 from dateutil.parser import isoparse, parse
 import math
-import logging
-import logging.config
 import yaml
 import sys
 import os
@@ -39,6 +39,8 @@ def setup_logging(
         logging.config.dictConfig(config)
     else:
         logging.basicConfig(level=default_level)
+    # set logging level for the root logger
+    logging.getLogger().setLevel(default_level)
 
 
 def _parse_args():
@@ -54,12 +56,12 @@ def _parse_args():
         help="course config file",
     )
     parser.add_argument(
-        '-a', '--action', dest='action',
-        action='store', default=['update'],
-        choices=['update', 'email', 'labs', 'appveyor', 'moss'],
+        '-u', '--update', dest='update_action',
+        action='store', default=['all'],
+        choices=['all', 'email', 'labs', 'appveyor', 'moss'],
         nargs='+',
         help="action to be taken: "
-             "perform all UPDATEs, read EMAILs only, check LABs only, "
+             "perform ALL updates, read EMAILs only, check LABs only, "
              "add new APPVEYOR projects only, run MOSS plagiarism check;\n"
              "use a combination of flags, e.g. 'email labs' to read emails "
              "and check labs, without doing other updates",
@@ -68,6 +70,12 @@ def _parse_args():
         '-l', '--labs', dest='labs',
         action='store', nargs='+', default='all',
         help="choose labs to be processed, default is all",
+    )
+    parser.add_argument(
+        '-a', '--auth', dest='authentication_config', action='store',
+        default=os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                             'auth.yaml'),
+        help="authentication config file",
     )
     # parser.add_argument(
     #     '--plagiarism', '--moss' dest='moss',
@@ -91,6 +99,11 @@ def _parse_args():
                              'logging.yaml'),
         help='set logging config file',
     )
+    parser.add_argument(
+        '-v', '--verbose', dest='verbosity',
+        action='count', default=0,
+        help="verbose output (repeat for increased verbosity)"
+    )
     return parser.parse_args()
 
 
@@ -100,10 +113,11 @@ def update_students(
 ):
     """
     """
+    logger = logging.getLogger(__name__)
     # read all new letters in mailbox and extract student info
-    print("Processing mailbox...\n")
+    logger.info("Processing mailbox...")
     students = mailbox.process_students(imap_conn, valid_subjects)
-    print(students)
+    logger.debug("New students from mailbox: %s", students)
     # validate student info and add to data
     for student in students:
         try:
@@ -123,8 +137,10 @@ def update_students(
             data_update = google_sheets.set_student_github(data, student, data_update=data_update)
         except ValueError as e:
             errmsg = "Unable to process request from student '{}'".format(student['name'])
-            print(errmsg)
-            print(e)
+            logger.error("%s", errmsg)
+            logger.exception(e)
+            # print(errmsg)
+            # print(e)
             email_text = (
                 "{}\n\nGroup: {} (raw: {})\nStudent: {}\nGitHub account: {}".format(
                     str(e),
@@ -144,7 +160,8 @@ def update_students(
                 # another report to be sent when the script is run next time
                 mailbox.mark_flagged(imap_conn, student['uid'])
             else:
-                print("An email would have been sent to {}. Subject: {}. Text: {}".format(recepients, errmsg, email_text))
+                logger.warning("An email would have been sent to %s. Subject: %s. Text: %s", recepients, errmsg, email_text)
+                # print("An email would have been sent to {}. Subject: {}. Text: {}".format(recepients, errmsg, email_text))
                 # set a message as unseen (unread)
                 mailbox.mark_unread(imap_conn, student['uid'])
         else:
@@ -164,38 +181,48 @@ def create_appveyor_projects(dry_run):
     return new_projects
 
 
-def check_lab(lab_id, groups, data, data_update=[]):
+def check_lab(lab_id, groups, data, data_update=[], course_config={}):
     """
     """
-    prefix = settings.os_labs[lab_id]['github_prefix']
-    repos = common.get_github_repo_names(settings.github_organization, prefix)
+    logger = logging.getLogger(__name__)
+    logger.info("Performing check on lab %s", lab_id)
+    prefix = course_config['labs'][lab_id]['github-prefix']
+    repos = common.get_github_repo_names(course_config['github']['organization'], prefix)
+    logger.debug("Found %d repos with %s prefix: %s", len(repos), prefix, repos)
     deadlines = {}
     lab_id_int = int(lab_id)
     for group in groups:
         deadline_str = google_sheets.get_lab_deadline(data, group, lab_id_int)
+        # add year if it is missing
         if len(deadline_str.split('.')) == 2:
-            deadline_str += '.{} 23:59:59 MSK'.format(datetime.datetime.now().year)
+            deadline_str += '.{}'.format(datetime.datetime.now().year)
+        # add hours, minutes and seconds based on Moscow time
+        deadline_str += ' 23:59:59 MSK'
         # print(deadline_str)
         try:
             deadlines[group] = parse(deadline_str, dayfirst=True)
         except ValueError:  # as e
             deadlines[group] = None
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("Deadlines for lab %s are: %s", lab_id, {k:v.isoformat() for (k, v) in deadlines.items()})
     for repo in repos:
         github_account = repo.split('/')[1][len(prefix)+1:]
         try:
             student = google_sheets.find_student_by_github(data, github_account)
         except ValueError as e:
             # student not found, probably he/she forgot to send a letter with GitHub account info
-            print(e)
+            logger.warning(e)
+            # print(e)
             continue
         # check if this lab is already accounted for
         current_status = google_sheets.get_student_lab_status(data, student, lab_id_int)
         if current_status is not None and not current_status.startswith('?'):
+            logger.debug("Student %s is skipped. Current lab status is '%s'", student, current_status)
             # this lab is already accounted for, skip it
             continue
 
         # check existence of repo_requirements node for lab_id
-        if "repo_requirements" in settings.os_labs[lab_id]:
+        if "repo_requirements" in course_config['labs'][lab_id]:
             grade_coefficient: float = 0.0
 
             # computing grade coefficient by commits
@@ -218,25 +245,36 @@ def check_lab(lab_id, groups, data, data_update=[]):
         # check if tests have passed successfully
         completion_date = None
         log = None
-        if lab_id_int == 3:
+        # TODO: we should iterate over all ci services found in the config, but for now only the frist ci service is processed
+        ci_service = course_config['labs'][lab_id].get('ci', [""])[0]
+        if ci_service == 'appveyor':
             completion_date = common.get_successfull_status_info(repo).get("updated_at")
             if completion_date:
                 log = common.get_appveyor_log(repo)
-        else:
+        elif ci_service == 'travis':
             completion_date = common.get_successfull_build_info(repo).get("completed_at")
             if completion_date:
                 log = common.get_travis_log(repo)
+        elif ci_service == 'workflows':
+            completion_date = common.get_successfull_build_info(repo).get("completed_at")
+            if completion_date:
+                log = common.get_github_workflows_log(repo)
+        # TODO: add support for not using any CI/CD service at all, e.g.:
+        # elif ci_service == '':
+        #     # do something
+        else:
+            raise ValueError(f"Unsupported CI/CD service '{ci_service}' for lab {lab_id} found")
         # check if tests were completed successfully and tests should not be ignored
-        if completion_date and not settings.os_labs[lab_id].get('ignore_completion_date', False):
+        if completion_date and not course_config['labs'][lab_id].get('ignore-completion-date', False):
             # log = common.get_travis_log(repo)
             # calculate correct TASKID
             student_task_id = int(google_sheets.get_student_task_id(data, student))
-            student_task_id += settings.os_labs[lab_id].get('taskid_shift', 0)
-            student_task_id = student_task_id % settings.os_labs[lab_id]['taskid_max']
+            student_task_id += course_config['labs'][lab_id].get('taskid-shift', 0)
+            student_task_id = student_task_id % course_config['labs'][lab_id]['taskid-max']
             if student_task_id == 0:
-                student_task_id = settings.os_labs[lab_id]['taskid_max']
+                student_task_id = course_config['labs'][lab_id]['taskid-max']
             # check TASKID from logs
-            if common.get_task_id(log) != student_task_id:
+            if common.get_task_id(log) != student_task_id and not course_config['labs'][lab_id].get('ignore-task-id', False):
                 google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong TASKID!", data_update=data_update)
             else:
                 # everything looks good, go on and update lab status
@@ -248,30 +286,39 @@ def check_lab(lab_id, groups, data, data_update=[]):
                     grade_reduction_suffix = ""
                 # calculate deadline penalty
                 student_dt = isoparse(completion_date)
+                penalty_suffix = ""
                 if student_dt > deadlines[student['group']]:
                     overdue = student_dt - deadlines[student['group']]
                     penalty = math.ceil((overdue.days + overdue.seconds / 86400) / 7)
                     # TODO: check that penalty does not exceed maximum grade points for that lab
-                    penalty = min(penalty, settings.os_labs[lab_id].get('penalty_max', 0))
-                    penalty_suffix = "-{}".format(penalty)
-                else:
-                    penalty_suffix = ""
+                    penalty = min(penalty, 
+                        course_config['labs'][lab_id].get('penalty-max', 0))
+                    if penalty > 0:
+                        penalty_suffix = "-{}".format(penalty)
+                    # print(f"{student_dt}, {deadlines[student['group']]}")
+                    # print(f"{overdue}, {penalty}")
                 # update status
-                google_sheets.set_student_lab_status(data, student, lab_id_int,
-                                                     "v{}{}".format(grade_reduction_suffix, penalty_suffix),
-                                                     data_update=data_update)
+                lab_status = "v{}{}".format(grade_reduction_suffix, penalty_suffix)
+                logger.debug("New status for lab '%s' by student %s is %s", lab_id, student, lab_status)
+                google_sheets.set_student_lab_status(
+                    data, student, lab_id_int,
+                    lab_status,
+                    data_update=data_update)
+        else:
+            logger.debug("No valid solution found for lab '%s' by student %s", lab_id, student)
     return data_update
 
 
-def check_plagiarism(lab_id, local_path):
+def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
     """
     """
     # TODO: this is unfinished function
-    prefix = settings.os_labs[lab_id]['github_prefix']
+    prefix = course_config['labs'][lab_id]['github-prefix']
     # get a list of repositories
-    repos = common.get_github_repo_names(settings.github_organization, prefix)
+    repos = common.get_github_repo_names(
+        course_config['github']['organization'], prefix)
     # initialize MOSS
-    moss_settings = settings.os_labs[lab_id].get('moss', {})
+    moss_settings = course_config['labs'][lab_id].get('moss', {})
     moss = mosspy.Moss(
         settings.moss_userid,
         moss_settings.get('language')
@@ -309,8 +356,11 @@ def check_plagiarism(lab_id, local_path):
     file_count = 0
     for repo in repos:
         github_account = repo.split('/')[1][len(prefix)+1:]
-        for filename in settings.os_labs[lab_id].get('files', []):
-            file_contents = common.github_get_file(repo, filename)
+        for filename in course_config['labs'][lab_id].get('files', []):
+            try:
+                file_contents = common.github_get_file(repo, filename)
+            except:
+                continue
             local_dir = os.path.join(
                 local_path,
                 # repo,
@@ -332,7 +382,8 @@ def check_plagiarism(lab_id, local_path):
             with open(local_filename, "wb") as f:
                 f.write(file_contents)
             dt = common.github_get_latest_commit_date(repo)
-            display_name = f"{lab_id}_{github_account}_{dt:%Y-%m-%d}"
+            display_name = (f"{lab_id}_{github_account}_"
+                f"{filename}_{dt:%Y-%m-%d}")
             moss.addFile(local_filename, display_name)
             file_count += 1
     print(f"Total {file_count} files were downloaded. Sending them to MOSS...")
@@ -377,18 +428,41 @@ def check_plagiarism(lab_id, local_path):
 def main():
     # parse command line parameters
     params = _parse_args()
-    # enable logging
-    setup_logging(params.logging_config)
+    # Python log levels go from 10 (DEBUG) to 50 (CRITICAL),
+    # our verbosity argument goes from 0 to 2 (-vv).
+    # We never want to suppress error and critical messages,
+    # and default to use 30 (WARNING). Hence:
+    base_loglevel = getattr(logging, 'WARNING')
+    params.verbosity = min(params.verbosity, 2)
+    loglevel = base_loglevel - (params.verbosity * 10)
+    setup_logging(params.logging_config, default_level=loglevel)
     logger = logging.getLogger(__name__)
+    # logger.setLevel(loglevel)
+    # load authentication data
+    try:
+        with open(params.authentication_config) as f:
+            config = yaml.load(f, Loader=yaml.SafeLoader)
+    except FileNotFoundError:
+        logger.warning("Authentication config file '%s' does not exist",
+            params.authentication_config)
+        config = {}
     # load course description
-    with open(params.course_config) as f:
-        config = yaml.load(f, Loader=yaml.SafeLoader)
+    try:
+        with open(params.course_config) as f:
+            course_config = yaml.load(f, Loader=yaml.SafeLoader)
+    except FileNotFoundError:
+        logger.critical("Course config file '%s' does not exist",
+            params.course_config)
+        # course_config = {}
+        raise
+    else:
+        config.update(course_config)
     # check arguments
     if params.labs == 'all' or params.labs == '*':
         params.labs = config['course']['labs'].keys()
     logger.info(params)
     # perform action
-    if "moss" not in params.action:
+    if "moss" not in params.update_action:
         # initialization
         data_update = []
         # connect to Google Sheets API
@@ -399,7 +473,7 @@ def main():
         sheets = ["'{}'".format(s) for s in sheets]
         data = google_sheets.get_multiple_sheets_data(gs, sheets, config)
         # check email
-        if "update" in params.action or "email" in params.action:
+        if "all" in params.update_action or "email" in params.update_action:
             # connect to IMAP
             imap_conn = mailbox.get_imap_connection(config)
             # process INBOX and update spreadsheet
@@ -413,10 +487,11 @@ def main():
                 email_config=config['auth']['email'],
                 return_address=config['course']['email'])
         # check labs
-        if "update" in params.action or "labs" in params.action:
+        if "all" in params.update_action or "labs" in params.update_action:
             for lab_id in params.labs:
                 data_update = check_lab(
-                    lab_id, sheets[:-1], data, data_update=data_update)
+                    lab_id, sheets[:-1], data, 
+                    data_update=data_update, course_config=config['course'])
         # update Google SpreadSheet
         if len(data_update) > 0:
             info_sheet = config['course']['google']['info-sheet']
@@ -425,7 +500,8 @@ def main():
                 # 'majorDimension': dimension,
                 'values': [[datetime.datetime.now().isoformat()]]
             })
-            print(data_update)
+            logger.info("Data update: %s", data_update)
+            # print(data_update)
             if not params.dry_run:
                 updated_cells = google_sheets.batch_update(
                     gs, data_update, config)
@@ -435,7 +511,9 @@ def main():
                         "from expected ({len(data_update)})! Check the data "
                         "manually. Data update: {data_update}")
         # add all new repos to AppVeyor
-        if "update" in params.action or "appveyor" in params.action:
+        if ("all" in params.update_action 
+            or "appveyor" in params.update_action
+        ):
             new_projects = create_appveyor_projects(params.dry_run)
             projects_count = len(new_projects)
             if params.dry_run:
@@ -443,18 +521,21 @@ def main():
                 projects_msg_part += " would have been"
             else:
                 projects_msg_part = " was" if projects_count == 1 else "s were"
-            print(f"{projects_count} new AppVeyour project{projects_msg_part} "
-                  "added: {';'.join(new_projects)}")
+            logger.info("%d new AppVeyour project%s "
+                  "added: %s", projects_count, projects_msg_part, ';'.join(new_projects))
         # close IMAP connections
         try:
             imap_conn.close()
             imap_conn.logout()
         except Exception:
             pass
-    elif "moss" in params.action:
+    elif "moss" in params.update_action:
         # check labs
         for lab_id in params.labs:
-            check_plagiarism(lab_id, "lab{}".format(lab_id))
+            check_plagiarism(
+                lab_id, "lab{}".format(lab_id), 
+                moss_user_id=config['auth']['moss']['user-id'],
+                course_config=config['course'])
 
 
 if __name__ == '__main__':
