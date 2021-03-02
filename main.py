@@ -246,7 +246,7 @@ def check_lab(lab_id, groups, data, data_update=[], course_config={}):
         completion_date = None
         log = None
         # TODO: we should iterate over all ci services found in the config, but for now only the frist ci service is processed
-        ci_service = course_config['labs'][lab_id].get('ci', [""])[0]
+        ci_service = course_config['labs'][lab_id].get('ci', [''])[0]
         if ci_service == 'appveyor':
             completion_date = common.get_successfull_status_info(repo).get("updated_at")
             if completion_date:
@@ -260,13 +260,13 @@ def check_lab(lab_id, groups, data, data_update=[], course_config={}):
             if completion_date:
                 log = common.get_github_workflows_log(repo)
         # TODO: add support for not using any CI/CD service at all, e.g.:
-        # elif ci_service == '':
-        #     # do something
+        elif ci_service == '':
+            # do something
+            pass
         else:
             raise ValueError(f"Unsupported CI/CD service '{ci_service}' for lab {lab_id} found")
         # check if tests were completed successfully and tests should not be ignored
         if completion_date and not course_config['labs'][lab_id].get('ignore-completion-date', False):
-            # log = common.get_travis_log(repo)
             # calculate correct TASKID
             student_task_id = int(google_sheets.get_student_task_id(data, student))
             student_task_id += course_config['labs'][lab_id].get('taskid-shift', 0)
