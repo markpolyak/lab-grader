@@ -58,7 +58,7 @@ course:
                 - workflows
         "7":
             github-prefix: cm-task7
-            taskid-max: 20
+            taskid-max: 30
             penalty-max: 9
             ci:
                 - workflows
