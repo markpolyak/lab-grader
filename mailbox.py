@@ -184,7 +184,7 @@ def process_students(imap_conn, valid_subjects):
                     'group': "'{}'".format(group),
                     'raw_group': text_chunks[0],
                     'name': name,
-                    'github': text_chunks[2],
+                    'github': text_chunks[2].encode('ascii', 'ignore').decode("utf-8"),
                     'email': msg['from'],
                     'uid': uid
                 })
