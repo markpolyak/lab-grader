@@ -17,6 +17,9 @@ course:
     google:
         spreadsheet: 1DPTMvkkWY6Tm32K0vXp1kDWJTTPFeHgBGHKAALdjvpY
         info-sheet: График
+        task-id-column: 0
+        student-name-column: 1
+        lab-column-offset: 1
     labs:
         "0":
             github-prefix: os-task0
@@ -51,7 +54,7 @@ course:
             taskid-shift: 4
             penalty-max: 8
             ci:
-                - travis
+                - workflows
             files:
                 - lab2.cpp
             moss:
