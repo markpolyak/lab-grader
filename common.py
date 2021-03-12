@@ -383,13 +383,14 @@ def get_github_issue_referenced_events(repo: str, issue_number: str):
 
 
 #
-def get_successfull_build_info(repo):
+def get_successfull_build_info(repo, check_run_names):
     check_runs = get_github_check_runs(repo)
     # travis_build = None
     # completion_time = None
     for check_run in check_runs:
         if (
-            any(name in check_run.get("name") for name in ["Travis CI", "Autograding"])
+            # any(name in check_run.get("name") for name in ["Travis CI", "Autograding", "test"])
+            any(name in check_run.get("name") for name in check_run_names)
             and check_run.get("conclusion") == "success"
         ):
             # travis_build = check_run.get("external_id")
@@ -401,7 +402,7 @@ def get_successfull_build_info(repo):
 
 
 #
-def get_github_workflows_log(repo):
+def get_github_workflows_log(repo, check_run_names):
     """
     get log from github workflows
 
@@ -423,7 +424,7 @@ def get_github_workflows_log(repo):
     # skipping several steps.
     # WARNING! This is undocumented by GitHub and
     # might stop working in the future
-    job_id = get_successfull_build_info(repo).get("id")
+    job_id = get_successfull_build_info(repo, check_run_names).get("id")
     if not job_id:
         raise Exception("Unable to get job id from GitHub API check runs")
     workflows_headers = {
@@ -470,7 +471,7 @@ def get_github_workflows_log(repo):
     return res.content.decode('utf-8')
 
 #
-def get_travis_log(repo):
+def get_travis_log(repo, check_run_names):
     # check_runs_headers = {
     #     "User-Agent": "GitHubCheckRuns/1.0",
     #     "Authorization": "token " + settings.github_token,
@@ -493,7 +494,7 @@ def get_travis_log(repo):
     #         travis_build = check_run.get("external_id")
     #         completion_time = check_run.get("completed_at")
     #         break
-    travis_build = get_successfull_build_info(repo).get("external_id")
+    travis_build = get_successfull_build_info(repo, check_run_names).get("external_id")
     if not travis_build:
         return None
     # 

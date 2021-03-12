@@ -114,7 +114,7 @@ def process_students(imap_conn, valid_subjects):
         logger.debug('Message %s: %s', uid, subject)
         logger.debug('Raw Date: %s', msg['Date'])
         # if subject == 'Кафедра':
-        if subject not in valid_subjects:
+        if subject.lower() not in [s.lower() for s in valid_subjects]:
             mark_unread(imap_conn, uid)
             # print("Subject not matched. This email is ignored and left unread\n")
             logger.debug("Subject not matched. This email is ignored and left unread\n")

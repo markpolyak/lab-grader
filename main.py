@@ -203,8 +203,8 @@ def check_lab(lab_id, groups, data, data_update=[], course_config={}):
             deadlines[group] = parse(deadline_str, dayfirst=True)
         except ValueError:  # as e
             deadlines[group] = None
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug("Deadlines for lab %s are: %s", lab_id, {k:v.isoformat() for (k, v) in deadlines.items()})
+    # if logger.isEnabledFor(logging.DEBUG):
+    #     logger.debug("Deadlines for lab %s are: %s", lab_id, {k:v.isoformat() for (k, v) in deadlines.items()})
     for repo in repos:
         github_account = repo.split('/')[1][len(prefix)+1:]
         try:
@@ -243,69 +243,75 @@ def check_lab(lab_id, groups, data, data_update=[], course_config={}):
                 continue
 
         # check if tests have passed successfully
-        completion_date = None
-        log = None
-        # TODO: we should iterate over all ci services found in the config, but for now only the frist ci service is processed
-        ci_service = course_config['labs'][lab_id].get('ci', [''])[0]
-        if ci_service == 'appveyor':
-            completion_date = common.get_successfull_status_info(repo).get("updated_at")
-            if completion_date:
-                log = common.get_appveyor_log(repo)
-        elif ci_service == 'travis':
-            completion_date = common.get_successfull_build_info(repo).get("completed_at")
-            if completion_date:
-                log = common.get_travis_log(repo)
-        elif ci_service == 'workflows':
-            completion_date = common.get_successfull_build_info(repo).get("completed_at")
-            if completion_date:
-                log = common.get_github_workflows_log(repo)
-        # TODO: add support for not using any CI/CD service at all, e.g.:
-        elif ci_service == '':
-            # do something
-            pass
-        else:
-            raise ValueError(f"Unsupported CI/CD service '{ci_service}' for lab {lab_id} found")
-        # check if tests were completed successfully and tests should not be ignored
-        if completion_date and not course_config['labs'][lab_id].get('ignore-completion-date', False):
-            # calculate correct TASKID
-            student_task_id = int(google_sheets.get_student_task_id(data, student))
-            student_task_id += course_config['labs'][lab_id].get('taskid-shift', 0)
-            student_task_id = student_task_id % course_config['labs'][lab_id]['taskid-max']
-            if student_task_id == 0:
-                student_task_id = course_config['labs'][lab_id]['taskid-max']
-            # check TASKID from logs
-            if common.get_task_id(log) != student_task_id and not course_config['labs'][lab_id].get('ignore-task-id', False):
-                google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong TASKID!", data_update=data_update)
+        # TODO: we should iterate over all ci services found in the config, but for now only the first ci service is processed
+        # ci_service = course_config['labs'][lab_id].get('ci', [''])[0]
+        for ci_service in course_config['labs'][lab_id].get('ci', ['']):
+            logger.debug("Preforming check for '%s' data in %s", ci_service, repo)
+            completion_date = None
+            log = None
+            # TODO: check_run names should come from course yaml file. Replace the lists below with this parameter
+            if ci_service == 'appveyor':
+                completion_date = common.get_successfull_status_info(repo).get("updated_at")
+                if completion_date:
+                    log = common.get_appveyor_log(repo)
+            elif ci_service == 'travis':
+                completion_date = common.get_successfull_build_info(repo, ["Travis CI"]).get("completed_at")
+                if completion_date:
+                    log = common.get_travis_log(repo, ["Travis CI"])
+            elif ci_service == 'workflows':
+                completion_date = common.get_successfull_build_info(repo, ["Autograding", "test"]).get("completed_at")
+                if completion_date:
+                    log = common.get_github_workflows_log(repo, ["Autograding", "test"])
+            # TODO: add support for not using any CI/CD service at all, e.g.:
+            elif ci_service == '':
+                # do something
+                pass
             else:
-                # everything looks good, go on and update lab status
-                # calculate grade reduction coefficient
-                reduction_coefficient_str = common.get_grade_reduction_coefficient(log)
-                if reduction_coefficient_str is not None:
-                    grade_reduction_suffix = "*{}".format(reduction_coefficient_str)
+                raise ValueError(f"Unsupported CI/CD service '{ci_service}' for lab {lab_id} found")
+            logger.debug("Completion date for %s with %s is %s", repo, ci_service, completion_date)
+            # check if tests were completed successfully and tests should not be ignored
+            if completion_date and not course_config['labs'][lab_id].get('ignore-completion-date', False):
+                # calculate correct TASKID
+                student_task_id = int(google_sheets.get_student_task_id(data, student))
+                student_task_id += course_config['labs'][lab_id].get('taskid-shift', 0)
+                student_task_id = student_task_id % course_config['labs'][lab_id]['taskid-max']
+                if student_task_id == 0:
+                    student_task_id = course_config['labs'][lab_id]['taskid-max']
+                # check TASKID from logs
+                if common.get_task_id(log) != student_task_id and not course_config['labs'][lab_id].get('ignore-task-id', False):
+                    google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong TASKID!", data_update=data_update)
                 else:
-                    grade_reduction_suffix = ""
-                # calculate deadline penalty
-                student_dt = isoparse(completion_date)
-                penalty_suffix = ""
-                if student_dt > deadlines[student['group']]:
-                    overdue = student_dt - deadlines[student['group']]
-                    penalty = math.ceil((overdue.days + overdue.seconds / 86400) / 7)
-                    # TODO: check that penalty does not exceed maximum grade points for that lab
-                    penalty = min(penalty, 
-                        course_config['labs'][lab_id].get('penalty-max', 0))
-                    if penalty > 0:
-                        penalty_suffix = "-{}".format(penalty)
-                    # print(f"{student_dt}, {deadlines[student['group']]}")
-                    # print(f"{overdue}, {penalty}")
-                # update status
-                lab_status = "v{}{}".format(grade_reduction_suffix, penalty_suffix)
-                logger.debug("New status for lab '%s' by student %s is %s", lab_id, student, lab_status)
-                google_sheets.set_student_lab_status(
-                    data, student, lab_id_int,
-                    lab_status,
-                    data_update=data_update)
-        else:
-            logger.debug("No valid solution found for lab '%s' by student %s", lab_id, student)
+                    # everything looks good, go on and update lab status
+                    # calculate grade reduction coefficient
+                    reduction_coefficient_str = common.get_grade_reduction_coefficient(log)
+                    if reduction_coefficient_str is not None:
+                        grade_reduction_suffix = "*{}".format(reduction_coefficient_str)
+                    else:
+                        grade_reduction_suffix = ""
+                    # calculate deadline penalty
+                    student_dt = isoparse(completion_date)
+                    penalty_suffix = ""
+                    if student_dt > deadlines[student['group']]:
+                        overdue = student_dt - deadlines[student['group']]
+                        penalty = math.ceil((overdue.days + overdue.seconds / 86400) / 7)
+                        # TODO: check that penalty does not exceed maximum grade points for that lab
+                        penalty = min(penalty, 
+                            course_config['labs'][lab_id].get('penalty-max', 0))
+                        if penalty > 0:
+                            penalty_suffix = "-{}".format(penalty)
+                        # print(f"{student_dt}, {deadlines[student['group']]}")
+                        # print(f"{overdue}, {penalty}")
+                    # update status
+                    lab_status = "v{}{}".format(grade_reduction_suffix, penalty_suffix)
+                    logger.debug("New status for lab '%s' by student %s is %s from CI service '%s", lab_id, student, lab_status, ci_service)
+                    google_sheets.set_student_lab_status(
+                        data, student, lab_id_int,
+                        lab_status,
+                        data_update=data_update)
+                # correct solution found, don't iterate over other ci services
+                break
+            else:
+                logger.debug("No valid solution found for lab '%s' by student %s with CI service '%s'", lab_id, student, ci_service)
     return data_update
 
 
