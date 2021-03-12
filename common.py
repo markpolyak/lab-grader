@@ -87,6 +87,32 @@ def get_github_repo_names(org, prefix=None, private=None):
     return set([x['full_name'] for x in repos])
 
 
+#
+def get_github_repo_default_branch(repo):
+    """
+    Retrieves default branch name for repository from GitHub
+    
+    :param repo: repository name (with organization/owner prefix)
+    :returns: default branch name
+    """
+    default_branch_headers = {
+        "User-Agent": "GitHubDefaultBranchDetector/1.0",
+        "Authorization": "token " + settings.github_token,
+        "Accept": "application/vnd.github.antiope-preview+json",
+    }
+    res = requests_retry_session().get(
+        "https://api.github.com/repos/{}".format(
+            repo
+        ),
+        headers=default_branch_headers,
+        timeout=settings.requests_timeout
+    )
+    if res.status_code != 200:
+        raise Exception("GitHub API reported an error while trying to get info for repository '{}'! Message is '{}' ({}).".format(repo, res.reason, res.status_code))
+    return json.loads(res.content).get("default_branch")
+
+
+
 def github_user_exists(username):
     """
     Check if a GitHub user exists
@@ -95,8 +121,13 @@ def github_user_exists(username):
     :returns: True if user exists, False otherwise
     """
     # https://api.github.com/search/users?q=user:username
+    request_headers = {
+        "User-Agent": "GitHubUserValidator/1.0",
+        "Authorization": "token " + settings.github_token,
+    }
     res = requests_retry_session().get(
         'https://api.github.com/search/users?q=user:{}'.format(username),
+        headers=request_headers,
         timeout=settings.requests_timeout
     )
     if res.status_code != 200:
@@ -220,9 +251,10 @@ def get_github_check_runs(repo):
         "Authorization": "token " + settings.github_token,
         "Accept": "application/vnd.github.antiope-preview+json",
     }
+    default_branch = get_github_repo_default_branch(repo)
     res = requests_retry_session().get(
-        "https://api.github.com/repos/{}/commits/master/check-runs".format(
-            repo
+        "https://api.github.com/repos/{}/commits/{}/check-runs".format(
+            repo, default_branch
         ),
         headers=check_runs_headers,
         timeout=settings.requests_timeout
@@ -351,13 +383,14 @@ def get_github_issue_referenced_events(repo: str, issue_number: str):
 
 
 #
-def get_successfull_build_info(repo):
+def get_successfull_build_info(repo, check_run_names):
     check_runs = get_github_check_runs(repo)
     # travis_build = None
     # completion_time = None
     for check_run in check_runs:
         if (
-            "Travis CI" in check_run.get("name") 
+            # any(name in check_run.get("name") for name in ["Travis CI", "Autograding", "test"])
+            any(name in check_run.get("name") for name in check_run_names)
             and check_run.get("conclusion") == "success"
         ):
             # travis_build = check_run.get("external_id")
@@ -369,7 +402,76 @@ def get_successfull_build_info(repo):
 
 
 #
-def get_travis_log(repo):
+def get_github_workflows_log(repo, check_run_names):
+    """
+    get log from github workflows
+
+    :param repo: repository name (with organization/owner prefix)
+    :return: log
+    """
+    # from observation of GitHub API output the 'id' parameter of a check run
+    # is identical to the job id of a corresponding workflow;
+    # so, instead of doing the following sequence:
+    # - retrieving a list of action runs from
+    # https://api.github.com/repos/{repo}/actions/runs
+    # - looking for a job id for the most recent workflow run
+    # and retrieving it from "jobs_url" of the workflow run
+    # https://api.github.com/repos/{repo}/actions/runs/{workflow_run_id}/jobs # noqa
+    # - retrieving a log URL from "Location" header in response to the query
+    # https://api.github.com/repos/{repo}/actions/jobs/{job_id}/logs
+    # - downloading the log from the URL in the "Location" header above;
+    # we get the check run id and use it instead of the job id,
+    # skipping several steps.
+    # WARNING! This is undocumented by GitHub and
+    # might stop working in the future
+    job_id = get_successfull_build_info(repo, check_run_names).get("id")
+    if not job_id:
+        raise Exception("Unable to get job id from GitHub API check runs")
+    workflows_headers = {
+        "User-Agent": "GitHubWorkflowsLog/1.0",
+        "Authorization": "token " + settings.github_token,
+        "Accept": "application/vnd.github.v3+json",
+    }
+    res = requests_retry_session().get(
+        "https://api.github.com/repos/{}/actions/jobs/{}/logs".format(
+            repo, job_id
+        ),
+        headers=workflows_headers,
+        timeout=settings.requests_timeout
+    )
+    # # no need to run the code below, because if 'Location' header is present,
+    # # requests will automatically redirect and load logs from that URL
+    # if res.status_code != 302:
+    #     raise Exception(
+    #         "GitHub API reported an error while trying to get "
+    #         "workflow run job {} for repository '{}'! Message is '{}' ("
+    #         "{}).".format(
+    #             job_id, repo, res.reason, res.status_code))
+    # logs_url = res.headers.get('Location')
+    # if not logs_url:
+    #     raise Exception(
+    #         "Logs for job {} in repository '{}' not found!".format(
+    #             job_id, repo))
+    #
+    # res = requests_retry_session().get(
+    #     logs_url,
+    #     headers=workflows_headers,
+    #     timeout=settings.requests_timeout
+    # )
+    if res.status_code == 410:
+        # log already deleted
+        # TODO: logger.warning()
+        return ""
+    if res.status_code != 200:
+        raise Exception(
+            "GitHub API reported an error while trying to get "
+            "build log for job {} for repository '{}'! "
+            "Message is '{}' ({}).".format(
+                job_id, repo, res.reason, res.status_code))
+    return res.content.decode('utf-8')
+
+#
+def get_travis_log(repo, check_run_names):
     # check_runs_headers = {
     #     "User-Agent": "GitHubCheckRuns/1.0",
     #     "Authorization": "token " + settings.github_token,
@@ -392,7 +494,7 @@ def get_travis_log(repo):
     #         travis_build = check_run.get("external_id")
     #         completion_time = check_run.get("completed_at")
     #         break
-    travis_build = get_successfull_build_info(repo).get("external_id")
+    travis_build = get_successfull_build_info(repo, check_run_names).get("external_id")
     if not travis_build:
         return None
     # 
@@ -515,7 +617,12 @@ def get_task_id(log):
     if i < 0:
         return None
     i += len("TASKID is") + 1
-    return int(log[i:i+2].strip())
+    try:
+        task_id = int(log[i:i+2].strip())
+    except ValueError as e:
+        print(e)
+        task_id = -1
+    return task_id
 
 
 def get_grade_reduction_coefficient(log):
@@ -529,6 +636,8 @@ def get_grade_reduction_coefficient(log):
     i = log.find(reduction_str)
     if i < 0:
         return None
+    # print(log)
+    # print(i)
     i += len(reduction_str) + 1
     reduction_percent = int(log[i:log.find("%", i)].strip())
     if reduction_percent == 0:
@@ -604,6 +713,10 @@ def get_repo_issues_grade_coefficient(repo: str, lab_id: str):
                                            if event['actor']['login'] not in settings.teacher_github_logins
                                            and event['commit_id'] is not None
                                            and repo in event['commit_url']]
+        if len(student_commit_events_for_issue) == 0:
+            student_commit_events_for_issue = [
+                
+            ]
 
         if len(student_commit_events_for_issue) >= 1:
             if linked_commit_msg_part is not None:

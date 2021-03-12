@@ -1,0 +1,69 @@
+---
+# Configuration file for lab-grader
+
+course:
+    name: Computational modelling
+    alt-names: 
+        - CM
+        - Компьютерное моделирование
+        - КМ   
+    semester: Fall 2020
+    email: k43guap@ya.ru
+    github:
+        organization: suai-cm-2020
+        teachers:
+            - "Mark Polyak"
+            - markpolyak
+    google:
+        spreadsheet: 1Bh3ypJ4yxl552n2B3WRUfHBhbAxRlazJVPxle9XXY_E
+        info-sheet: График
+    labs:
+        "1":
+            github-prefix: cp-task1
+            taskid-max: 30
+            penalty-max: 6
+            ignore-task-id: True
+            ci:
+                - workflows
+        "2":
+            github-prefix: cm-task2
+            taskid-max: 30
+            penalty-max: 10
+            ignore-task-id: True
+            ci:
+                - workflows
+        "3":
+            github-prefix: cm-task3
+            taskid-max: 30
+            penalty-max: 10
+            ci:
+                - workflows
+        "4":
+            github-prefix: cm-task4
+            taskid-max: 30
+            penalty-max: 10
+            ci:
+                - workflows
+        "5":
+            github-prefix: cm-task5
+            taskid-max: 30
+            penalty-max: 8
+            ci:
+                - workflows
+        "6":
+            github-prefix: cm-task6
+            taskid-max: 30
+            penalty-max: 7
+            ci:
+                - workflows
+        "7":
+            github-prefix: cm-task7
+            taskid-max: 30
+            penalty-max: 9
+            ci:
+                - workflows
+
+misc:
+    requests-timeout: 5
+    
+    

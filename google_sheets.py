@@ -17,6 +17,22 @@ STUDENT_NAME_COLUMN = 1
 LAB_COLUMN_OFFSET = 1
 
 
+# class StudentGoogleSheet:
+#     spreadsheet = None
+#     exemplars = []
+#     sheets = None
+#     data = None
+#     connected = False
+#     # some predefined constants that describe data structure
+#     # need to move it out to settings
+#     STUDENT_NAME_COLUMN = 1
+#     LAB_COLUMN_OFFSET = 1
+#
+#     def __init__(self, student=None):
+#         self.student = student
+#         self.exemplars.append(self)
+
+
 def colnum_string(n, zero_based=False):
     string = ""
     if zero_based:
@@ -27,10 +43,11 @@ def colnum_string(n, zero_based=False):
     return string
 
 
-def get_spreadsheet_instance():
+def get_spreadsheet_instance(config):
     """
     Performs authentication and creates a service.spreadsheets() instance
     
+    :param config: a course config
     :returns: service.spreadsheets() instance
     """
     creds = None
@@ -46,7 +63,7 @@ def get_spreadsheet_instance():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                settings.google_credentials_file, SCOPES)
+                config['auth']['google']['credentials-file'], SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open('token.pickle', 'wb') as token:
@@ -59,31 +76,38 @@ def get_spreadsheet_instance():
     return spreadsheet
 
 
-def get_sheet_names(spreadsheet):
+def get_sheet_names(spreadsheet, config):
     """
     Get all sheet names that are present on the spreadsheet
     
     :param spreadsheet: a service.spreadsheets() instance
+    :param config: a course config
     :returns: list with sheet names
     """
     sheets = []
-    result = spreadsheet.get(spreadsheetId=settings.google_spreadsheet_id).execute()
+    result = spreadsheet.get(
+        spreadsheetId=config['course']['google']['spreadsheet']
+    ).execute()
     for s in result['sheets']:
         sheets.append(s.get('properties', {}).get('title'))
     return sheets
 
 
-def get_multiple_sheets_data(spreadsheet, sheets, dimension='COLUMNS'):
+def get_multiple_sheets_data(spreadsheet, sheets, config, dimension='COLUMNS'):
     """
     Get data from multiple sheets at once with a batchGet request
     
     :param spreadsheet: a service.spreadsheets() instance
     :param sheets: a list of sheet names for which the data is to be retrieved
+    :param config: a course config
     :param dimension: passed to spreadsheet.values().batchGet as a value of majorDimension param. Possible values are 'COLUMNS' or 'ROWS'
     :returns: dict with sheet name as key and data as value
     """
     data = {}
-    request = spreadsheet.values().batchGet(spreadsheetId=settings.google_spreadsheet_id, ranges=sheets, majorDimension=dimension)
+    request = spreadsheet.values().batchGet(
+        spreadsheetId=config['course']['google']['spreadsheet'], 
+        ranges=sheets, majorDimension=dimension
+    )
     response = request.execute()
     for i in range(0, len(response.get('valueRanges'))):
         data[sheets[i]] = response.get('valueRanges')[i].get('values')
@@ -360,18 +384,22 @@ def set_student_lab_status(data, student, lab_id, value, dimension='COLUMNS', da
     return data_update
 
 
-def batch_update(spreadsheet, data_update):
+def batch_update(spreadsheet, data_update, config):
     """
     Performs a batchUpdate query on a spreadsheet
     
+    :param config: a course config
     :param spreadsheet: a service.spreadsheets() instance
+    :returns: number of updated cells
     """
     body = {
         'valueInputOption': "RAW",
         'data': data_update
     }
     result = spreadsheet.values().batchUpdate(
-        spreadsheetId=settings.google_spreadsheet_id, body=body).execute()
+        spreadsheetId=config['course']['google']['spreadsheet'],
+        body=body
+    ).execute()
     print('{0} cells updated.'.format(result.get('totalUpdatedCells')))
     return result.get('totalUpdatedCells')
     # raise ValueError("Not implemented!")
