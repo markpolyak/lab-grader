@@ -108,7 +108,7 @@ def _parse_args():
 
 
 def update_students(
-    imap_conn, data, data_update=[], dry_run=False,
+    imap_conn, spreadsheet, dry_run=False,
     valid_subjects=[], email_config={}, return_address=''
 ):
     """
@@ -134,7 +134,7 @@ def update_students(
             # account is done by course staff only to prohibit cheating)
             # - this github account is already used by another student (most
             # likely a cheating attempt)
-            data_update = google_sheets.set_student_github(data, student, data_update=data_update)
+            data_update = spreadsheet.set_student_github(student)
         except ValueError as e:
             errmsg = "Unable to process request from student '{}'".format(student['name'])
             logger.error("%s", errmsg)
@@ -168,7 +168,7 @@ def update_students(
             if dry_run:
                 # set a message as unseen (unread)
                 mailbox.mark_unread(imap_conn, student['uid'])
-    return data_update
+    return spreadsheet.data_update
 
 
 def create_appveyor_projects(dry_run):
@@ -181,7 +181,7 @@ def create_appveyor_projects(dry_run):
     return new_projects
 
 
-def check_lab(lab_id, groups, data, data_update=[], course_config={}):
+def check_lab(lab_id, groups, spreadsheet, course_config={}):
     """
     """
     logger = logging.getLogger(__name__)
@@ -192,7 +192,7 @@ def check_lab(lab_id, groups, data, data_update=[], course_config={}):
     deadlines = {}
     lab_id_int = int(lab_id)
     for group in groups:
-        deadline_str = google_sheets.get_lab_deadline(data, group, lab_id_int)
+        deadline_str = spreadsheet.get_lab_deadline(group, lab_id_int)
         # add year if it is missing
         if len(deadline_str.split('.')) == 2:
             deadline_str += '.{}'.format(datetime.datetime.now().year)
@@ -208,14 +208,14 @@ def check_lab(lab_id, groups, data, data_update=[], course_config={}):
     for repo in repos:
         github_account = repo.split('/')[1][len(prefix)+1:]
         try:
-            student = google_sheets.find_student_by_github(data, github_account)
+            student = spreadsheet.find_student_by_github(github_account)
         except ValueError as e:
             # student not found, probably he/she forgot to send a letter with GitHub account info
             logger.warning(e)
             # print(e)
             continue
         # check if this lab is already accounted for
-        current_status = google_sheets.get_student_lab_status(data, student, lab_id_int)
+        current_status = spreadsheet.get_student_lab_status(student, lab_id_int)
         if current_status is not None and not current_status.startswith('?'):
             logger.debug("Student %s is skipped. Current lab status is '%s'", student, current_status)
             # this lab is already accounted for, skip it
@@ -236,8 +236,9 @@ def check_lab(lab_id, groups, data, data_update=[], course_config={}):
                 grade_coefficient += issues_grade_coefficient
 
             if grade_coefficient > 0.0:
-                google_sheets.set_student_lab_status(data, student, lab_id_int, "?v*{0:g}".format(grade_coefficient),
-                                                     data_update=data_update)
+                spreadsheet.set_student_lab_status(
+                    student, lab_id_int, "?v*{0:g}".format(grade_coefficient)
+                )
             else:
                 # calculated coefficient for this lab is zero, skip it
                 continue
@@ -259,9 +260,9 @@ def check_lab(lab_id, groups, data, data_update=[], course_config={}):
                 if completion_date:
                     log = common.get_travis_log(repo, ["Travis CI"])
             elif ci_service == 'workflows':
-                completion_date = common.get_successfull_build_info(repo, ["Autograding", "test"]).get("completed_at")
+                completion_date = common.get_successfull_build_info(repo, ["Autograding", "test", "build"]).get("completed_at")
                 if completion_date:
-                    log = common.get_github_workflows_log(repo, ["Autograding", "test"])
+                    log = common.get_github_workflows_log(repo, ["Autograding", "test", "build"])
             # TODO: add support for not using any CI/CD service at all, e.g.:
             elif ci_service == '':
                 # do something
@@ -272,14 +273,14 @@ def check_lab(lab_id, groups, data, data_update=[], course_config={}):
             # check if tests were completed successfully and tests should not be ignored
             if completion_date and not course_config['labs'][lab_id].get('ignore-completion-date', False):
                 # calculate correct TASKID
-                student_task_id = int(google_sheets.get_student_task_id(data, student))
+                student_task_id = int(spreadsheet.get_student_task_id(student))
                 student_task_id += course_config['labs'][lab_id].get('taskid-shift', 0)
                 student_task_id = student_task_id % course_config['labs'][lab_id]['taskid-max']
                 if student_task_id == 0:
                     student_task_id = course_config['labs'][lab_id]['taskid-max']
                 # check TASKID from logs
                 if common.get_task_id(log) != student_task_id and not course_config['labs'][lab_id].get('ignore-task-id', False):
-                    google_sheets.set_student_lab_status(data, student, lab_id_int, "?! Wrong TASKID!", data_update=data_update)
+                    spreadsheet.set_student_lab_status(student, lab_id_int, "?! Wrong TASKID!")
                 else:
                     # everything looks good, go on and update lab status
                     # calculate grade reduction coefficient
@@ -304,15 +305,14 @@ def check_lab(lab_id, groups, data, data_update=[], course_config={}):
                     # update status
                     lab_status = "v{}{}".format(grade_reduction_suffix, penalty_suffix)
                     logger.debug("New status for lab '%s' by student %s is %s from CI service '%s", lab_id, student, lab_status, ci_service)
-                    google_sheets.set_student_lab_status(
-                        data, student, lab_id_int,
-                        lab_status,
-                        data_update=data_update)
+                    spreadsheet.set_student_lab_status(
+                        student, lab_id_int, lab_status,
+                    )
                 # correct solution found, don't iterate over other ci services
                 break
             else:
                 logger.debug("No valid solution found for lab '%s' by student %s with CI service '%s'", lab_id, student, ci_service)
-    return data_update
+    return spreadsheet.data_update
 
 
 def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
@@ -474,20 +474,19 @@ def main():
         # initialization
         data_update = []
         # connect to Google Sheets API
-        gs = google_sheets.get_spreadsheet_instance(config)
-        # load data from Google Sheets
-        sheets = google_sheets.get_sheet_names(gs, config)
-        # print(sheets)
-        sheets = ["'{}'".format(s) for s in sheets]
-        data = google_sheets.get_multiple_sheets_data(gs, sheets, config)
+        spreadsheet = google_sheets.GoogleSheet(config)
+        # # load data from Google Sheets
+        # sheets = spreadsheet.get_sheet_names(gs, config)
+        # # print(sheets)
+        # sheets = ["'{}'".format(s) for s in sheets]
+        # data = google_sheets.get_multiple_sheets_data(gs, sheets, config)
         # check email
         if "all" in params.update_action or "email" in params.update_action:
             # connect to IMAP
             imap_conn = mailbox.get_imap_connection(config)
             # process INBOX and update spreadsheet
             data_update = update_students(
-                imap_conn, data,
-                data_update=data_update,
+                imap_conn, spreadsheet,
                 dry_run=params.dry_run,
                 valid_subjects=(
                     [config['course']['name']]
@@ -498,8 +497,9 @@ def main():
         if "all" in params.update_action or "labs" in params.update_action:
             for lab_id in params.labs:
                 data_update = check_lab(
-                    lab_id, sheets[:-1], data, 
-                    data_update=data_update, course_config=config['course'])
+                    lab_id, spreadsheet.sheets[:-1], spreadsheet,
+                    course_config=config['course']
+                )
         # update Google SpreadSheet
         if len(data_update) > 0:
             info_sheet = config['course']['google']['info-sheet']
@@ -511,8 +511,7 @@ def main():
             logger.info("Data update: %s", data_update)
             # print(data_update)
             if not params.dry_run:
-                updated_cells = google_sheets.batch_update(
-                    gs, data_update, config)
+                updated_cells = spreadsheet.batch_update()
                 if updated_cells != len(data_update):
                     raise ValueError(
                         f"Number of updated cells ({updated_cells}) differs "
