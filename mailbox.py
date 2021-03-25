@@ -119,15 +119,17 @@ def process_students(imap_conn, valid_subjects):
             # print("Subject not matched. This email is ignored and left unread\n")
             logger.debug("Subject not matched. This email is ignored and left unread\n")
             continue
-        # Now convert to local date-time
-        date_tuple = email.utils.parsedate_tz(msg['Date'])
-        if date_tuple:
-            local_date = datetime.datetime.fromtimestamp(
-                email.utils.mktime_tz(date_tuple))
-            print(
-                "Local Date:",
-                local_date.strftime("%a, %d %b %Y %H:%M:%S")
-            )
+        # # Now convert to local date-time
+        # date_tuple = email.utils.parsedate_tz(msg['Date'])
+        # if date_tuple:
+        #     local_date = datetime.datetime.fromtimestamp(
+        #         email.utils.mktime_tz(date_tuple))
+        #     print(
+        #         "Local Date:",
+        #         local_date.strftime("%a, %d %b %Y %H:%M:%S %z")
+        #     )
+        email_timestamp = email.utils.parsedate_to_datetime(msg['Date'])
+        print("Local Date:", email_timestamp)
         # print(get_first_text_block(msg))
         # bodytext = msg.get_content()
         # print(bodytext)
@@ -186,7 +188,9 @@ def process_students(imap_conn, valid_subjects):
                     'name': name,
                     'github': text_chunks[2].encode('ascii', 'ignore').decode("utf-8"),
                     'email': msg['from'],
-                    'uid': uid
+                    'uid': uid,
+                    'email_subject': subject,
+                    'email_timestamp': email_timestamp
                 })
             else:
                 # print(
