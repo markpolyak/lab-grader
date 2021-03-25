@@ -72,7 +72,7 @@ course:
             taskid-max: 20
             penalty-max: 8
             ci:
-                - appveyor
+                - workflows
             files:
                 - lab3.cpp
             moss:
