@@ -383,22 +383,20 @@ def get_github_issue_referenced_events(repo: str, issue_number: str):
 
 
 #
-def get_successfull_build_info(repo, check_run_names):
+def get_successfull_build_info(repo, check_run_names, all_successfull=False):
     check_runs = get_github_check_runs(repo)
-    # travis_build = None
-    # completion_time = None
+    latest_check_run = {}
     for check_run in check_runs:
+        if all_successfull and check_run.get("conclusion") != "success":
+            return {}
         if (
-            # any(name in check_run.get("name") for name in ["Travis CI", "Autograding", "test"])
             any(name in check_run.get("name") for name in check_run_names)
             and check_run.get("conclusion") == "success"
+            and check_run.get("completed_at", "") > latest_check_run.get("completed_at", "")
         ):
-            # travis_build = check_run.get("external_id")
-            # completion_time = check_run.get("completed_at")
-            return check_run
-    # if not travis_build:
-    return {}
-    # return 
+            # return check_run
+            latest_check_run = check_run
+    return latest_check_run
 
 
 #

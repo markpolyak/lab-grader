@@ -142,8 +142,10 @@ def update_students(
             # print(errmsg)
             # print(e)
             email_text = (
-                "{}\n\nGroup: {} (raw: {})\nStudent: {}\nGitHub account: {}".format(
+                "{}\n\nSubject: {}\nDate received: {}\nGroup: {} (raw: {})\nStudent: {}\nGitHub account: {}".format(
                     str(e),
+                    student['email_subject'],
+                    student['email_timestamp'],
                     student['group'],
                     student['raw_group'],
                     student['name'],
@@ -260,7 +262,9 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                 if completion_date:
                     log = common.get_travis_log(repo, ["Travis CI"])
             elif ci_service == 'workflows':
-                completion_date = common.get_successfull_build_info(repo, ["Autograding", "test", "build"]).get("completed_at")
+                completion_date = common.get_successfull_build_info(
+                    repo, ["Autograding", "test", "build"], all_successfull=True
+                ).get("completed_at")
                 if completion_date:
                     log = common.get_github_workflows_log(repo, ["Autograding", "test", "build"])
             # TODO: add support for not using any CI/CD service at all, e.g.:
