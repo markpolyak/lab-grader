@@ -87,7 +87,7 @@ course:
             taskid-max: 30
             penalty-max: 10
             ci:
-                - travis
+                - workflows
             files:
                 - lab4.cpp
             moss:
