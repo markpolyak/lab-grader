@@ -632,6 +632,11 @@ def get_grade_reduction_coefficient(log):
     """
     reduction_str = "Grading reduced by"
     i = log.find(reduction_str)
+    # skip all occurences that start with a comma, 
+    # e.g. from source code like `echo "Grading reduced by ..."`,
+    # which is echoed to the log before being executed
+    while i > 0 and (log[i-1] == '"' or log[i-1] == "'"):
+        i = log.find(reduction_str, i+1)
     if i < 0:
         return None
     # print(log)
