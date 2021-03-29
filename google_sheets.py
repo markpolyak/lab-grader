@@ -258,7 +258,7 @@ class GoogleSheet:
         Get student's lab status from google spreadsheet
 
         :param student: dict with at least 'name' and 'group' keys
-        :param lab_id: integer lab identifier (starting from 1 onwards)
+        :param lab_id: string column name or integer lab identifier (starting from 1 onwards)
         :param dimension: how the data is stored, see spreadsheet.values().batchGet
         :returns: status of lab if student is found. None if student is found, but has no status for that lab
         :raises ValueError: if either group or student are not found in data
@@ -268,9 +268,13 @@ class GoogleSheet:
         student_position = self.find_student(student, dimension=dimension)
         student_lab_status = None
         try:
-            lab_column = self.lab_column_offset + lab_id
+            if isinstance(lab_id, str):
+                lab_column = self.find_column_by_name(lab_id, student['group'])
+            else:
+                lab_column = self.lab_column_offset + lab_id
+            # print(lab_id, student['group'], lab_column)
             student_lab_status = self.data[student['group']][lab_column][student_position]
-        except IndexError:
+        except (IndexError, TypeError):
             student_lab_status = None
         if student_lab_status == "":
             student_lab_status = None
@@ -282,16 +286,20 @@ class GoogleSheet:
         Get deadline for a lab 
 
         :param group: group the deadline to retrieve for
-        :param lab_id: integer lab identifier (starting from 1 onwards)
+        :param lab_id: string column name or integer lab identifier (starting from 1 onwards)
         :param dimension: how the data is stored, see spreadsheet.values().batchGet
         :returns: deadline for a given lab
         """
         if dimension != 'COLUMNS':
             raise ValueError("Not implemented! Only 'COLUMNS' dimension value is supported at the moment.")
         try:
-            lab_column = self.lab_column_offset + lab_id
+            if isinstance(lab_id, str):
+                lab_column = self.find_column_by_name(lab_id, group)
+            else:
+                lab_column = self.lab_column_offset + lab_id
+            # print(group, lab_id, lab_column)
             lab_deadline = self.data[group][lab_column][0]
-        except IndexError:
+        except (IndexError, TypeError):
             lab_deadline = None
         return lab_deadline
 
@@ -359,7 +367,7 @@ class GoogleSheet:
         Set student's result for lab 'lab_id' to 'value'
 
         :param student: dict with at least 'group' and one of 'name' or 'github' keys
-        :param lab_id: integer lab identifier (starting from 1 onwards)
+        :param lab_id: string column name or integer lab identifier (starting from 1 onwards)
         :param value: string value to be set as student's lab_id result
         :param dimension: how the data is stored, see spreadsheet.values().batchGet
         :returns: a list of pending data update requests with appended
@@ -369,7 +377,10 @@ class GoogleSheet:
         if dimension != 'COLUMNS':
             raise ValueError("Not implemented! Only 'COLUMNS' dimension value is supported at the moment.")
         student_position = self.find_student(student, dimension=dimension)
-        lab_column = self.lab_column_offset + lab_id
+        if isinstance(lab_id, str):
+            lab_column = self.find_column_by_name(lab_id, student['group'])
+        else:
+            lab_column = self.lab_column_offset + lab_id
         values_count = len(self.data[student['group']][lab_column])
         if values_count < student_position + 1:
             self.data[student['group']][lab_column] = [

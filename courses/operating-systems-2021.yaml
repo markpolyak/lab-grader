@@ -9,6 +9,7 @@ course:
         - ОС
     semester: Spring 2021
     email: k43guap@ya.ru
+    timezone: MSK
     github:
         organization: suai-os-2021
         teachers:
@@ -23,8 +24,10 @@ course:
     labs:
         "0":
             github-prefix: os-task0
+            short-name: ЛР0
             taskid-max: 20
             penalty-max: 6
+            # ignore-task-id: True
             ci:
                 - workflows
             files:
@@ -34,6 +37,7 @@ course:
                 max-matches: 1000
         "1":
             github-prefix: os-task1
+            short-name: ЛР1
             taskid-max: 20
             penalty-max: 6
             ci:
@@ -50,6 +54,7 @@ course:
                         filename: lab1.sh
         "2":
             github-prefix: os-task2
+            short-name: ЛР2
             taskid-max: 20
             taskid-shift: 4
             penalty-max: 8
@@ -69,6 +74,7 @@ course:
                         filename: examples/ex3.cpp
         "3":
             github-prefix: os-task3
+            short-name: ЛР3
             taskid-max: 20
             penalty-max: 8
             ci:
@@ -84,6 +90,7 @@ course:
                         filename: lab3.cpp
         "4":
             github-prefix: os-task4
+            short-name: ЛР4
             taskid-max: 30
             penalty-max: 10
             ci:
@@ -99,11 +106,13 @@ course:
                         filename: lab4.cpp
         "5":
             github-prefix: os-task5
+            short-name: ЛР5
             taskid-max: 30
             penalty-max: 8
             ignore-completion-date: True
         "6":
             github-prefix: os-task5
+            short-name: ЛР6
             taskid-max: 30
             penalty-max: 7
 

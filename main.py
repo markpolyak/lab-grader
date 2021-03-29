@@ -193,17 +193,19 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
     logger.debug("Found %d repos with %s prefix: %s", len(repos), prefix, repos)
     deadlines = {}
     lab_id_int = int(lab_id)
+    lab_id_column = course_config['labs'][lab_id].get('short-name', lab_id_int)
     for group in groups:
-        deadline_str = spreadsheet.get_lab_deadline(group, lab_id_int)
-        # add year if it is missing
-        if len(deadline_str.split('.')) == 2:
-            deadline_str += '.{}'.format(datetime.datetime.now().year)
-        # add hours, minutes and seconds based on Moscow time
-        deadline_str += ' 23:59:59 MSK'
-        # print(deadline_str)
+        deadline_str = spreadsheet.get_lab_deadline(group, lab_id_column)
+        if deadline_str:
+            # add year if it is missing
+            if len(deadline_str.split('.')) == 2:
+                deadline_str += '.{}'.format(datetime.datetime.now().year)
+            # add hours, minutes and seconds based on Moscow time
+            deadline_str += ' 23:59:59 ' + course_config.get('timezone', 'UTC')
+            # print(deadline_str)
         try:
             deadlines[group] = parse(deadline_str, dayfirst=True)
-        except ValueError:  # as e
+        except (ValueError, TypeError):
             deadlines[group] = None
     # if logger.isEnabledFor(logging.DEBUG):
     #     logger.debug("Deadlines for lab %s are: %s", lab_id, {k:v.isoformat() for (k, v) in deadlines.items()})
@@ -217,7 +219,7 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
             # print(e)
             continue
         # check if this lab is already accounted for
-        current_status = spreadsheet.get_student_lab_status(student, lab_id_int)
+        current_status = spreadsheet.get_student_lab_status(student, lab_id_column)
         if current_status is not None and not current_status.startswith('?'):
             logger.debug("Student %s is skipped. Current lab status is '%s'", student, current_status)
             # this lab is already accounted for, skip it
@@ -239,7 +241,9 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
 
             if grade_coefficient > 0.0:
                 spreadsheet.set_student_lab_status(
-                    student, lab_id_int, "?v*{0:g}".format(grade_coefficient)
+                    student,
+                    lab_id_column,
+                    "?v*{0:g}".format(grade_coefficient)
                 )
             else:
                 # calculated coefficient for this lab is zero, skip it
@@ -284,7 +288,9 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                     student_task_id = course_config['labs'][lab_id]['taskid-max']
                 # check TASKID from logs
                 if common.get_task_id(log) != student_task_id and not course_config['labs'][lab_id].get('ignore-task-id', False):
-                    spreadsheet.set_student_lab_status(student, lab_id_int, "?! Wrong TASKID!")
+                    spreadsheet.set_student_lab_status(student, lab_id_column, "?! Wrong TASKID!")
+                    print(common.get_task_id(log), student_task_id)
+                    print(log)
                 else:
                     # everything looks good, go on and update lab status
                     # calculate grade reduction coefficient
@@ -310,7 +316,7 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                     lab_status = "v{}{}".format(grade_reduction_suffix, penalty_suffix)
                     logger.debug("New status for lab '%s' by student '%s' is '%s' from CI service '%s'", lab_id, student, lab_status, ci_service)
                     spreadsheet.set_student_lab_status(
-                        student, lab_id_int, lab_status,
+                        student, lab_id_column, lab_status,
                     )
                 # correct solution found, don't iterate over other ci services
                 break
