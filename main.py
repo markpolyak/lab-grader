@@ -249,7 +249,7 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
         # TODO: we should iterate over all ci services found in the config, but for now only the first ci service is processed
         # ci_service = course_config['labs'][lab_id].get('ci', [''])[0]
         for ci_service in course_config['labs'][lab_id].get('ci', ['']):
-            logger.debug("Preforming check for '%s' data in %s", ci_service, repo)
+            logger.debug("Performing check for '%s' data in %s", ci_service, repo)
             completion_date = None
             log = None
             # TODO: check_run names should come from course yaml file. Replace the lists below with this parameter
@@ -308,7 +308,7 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                         # print(f"{overdue}, {penalty}")
                     # update status
                     lab_status = "v{}{}".format(grade_reduction_suffix, penalty_suffix)
-                    logger.debug("New status for lab '%s' by student %s is %s from CI service '%s", lab_id, student, lab_status, ci_service)
+                    logger.debug("New status for lab '%s' by student '%s' is '%s' from CI service '%s'", lab_id, student, lab_status, ci_service)
                     spreadsheet.set_student_lab_status(
                         student, lab_id_int, lab_status,
                     )
