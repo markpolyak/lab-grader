@@ -289,8 +289,8 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                 # check TASKID from logs
                 if common.get_task_id(log) != student_task_id and not course_config['labs'][lab_id].get('ignore-task-id', False):
                     spreadsheet.set_student_lab_status(student, lab_id_column, "?! Wrong TASKID!")
-                    print(common.get_task_id(log), student_task_id)
-                    print(log)
+                    # print(common.get_task_id(log), student_task_id)
+                    # print(log)
                 else:
                     # everything looks good, go on and update lab status
                     # calculate grade reduction coefficient
@@ -464,7 +464,7 @@ def main():
         config = {}
     # load course description
     try:
-        with open(params.course_config) as f:
+        with open(params.course_config, encoding="utf8") as f:
             course_config = yaml.load(f, Loader=yaml.SafeLoader)
     except FileNotFoundError:
         logger.critical("Course config file '%s' does not exist",
