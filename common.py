@@ -60,6 +60,8 @@ def get_github_repos(org, prefix=None, private=None, verbose=False):
         )
         page_number = page_number + 1
         if repos_page.status_code != 200:
+            print(repos_page.status_code)
+            print(repos_page.content)
             raise Exception("Failed to load repos from GitHub: " + repos_page.content)
             # exit(1)
         repos_page_json = repos_page.json()

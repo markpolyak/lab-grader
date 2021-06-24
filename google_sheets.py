@@ -133,6 +133,9 @@ class GoogleSheet:
             if col_name in self.data[sheet][i]:
                 _column_number = i
                 break
+        #print(col_name)
+        #print(self.data[sheet][3])
+        return _column_number
         return _column_number
 
     def _find_github_column(self, student, dimension='COLUMNS'):
@@ -378,9 +381,14 @@ class GoogleSheet:
             raise ValueError("Not implemented! Only 'COLUMNS' dimension value is supported at the moment.")
         student_position = self.find_student(student, dimension=dimension)
         if isinstance(lab_id, str):
+            print(lab_id)
             lab_column = self.find_column_by_name(lab_id, student['group'])
         else:
             lab_column = self.lab_column_offset + lab_id
+        print(student)
+        # print(self.data)
+        print(lab_column)
+        print(lab_id)
         values_count = len(self.data[student['group']][lab_column])
         if values_count < student_position + 1:
             self.data[student['group']][lab_column] = [

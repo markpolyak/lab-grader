@@ -1,0 +1,140 @@
+openapi: 3.0.0
+info:
+  version: "1.2.0"
+  title: Lab Grader REST API
+  
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/SUAI4/lab_grader_rest_api/1.1.0
+  - url: 'http://localhost:8080'
+  
+tags:
+  - name: lab-grader-api
+  
+paths:
+  /api/grader/labs:
+    post:
+      tags:
+        - lab-grader-api
+      summary: Check labs
+      requestBody:
+        description: Check labs params
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/LabsParam'  
+      responses:
+        '200':
+          description: OK; log id
+          content:
+            text/plain:
+              schema:
+                type: integer
+        '401':
+           $ref: '#/components/responses/UnauthorizedError'
+           
+  /api/grader/email:
+    post:
+      tags:
+        - lab-grader-api
+      summary: Check emails
+      requestBody:
+        description: Check emails params
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/EmailsParam'
+      responses:
+        '200':
+          description: OK; log id
+          content:
+            text/plain:
+              schema:
+                type: integer
+        '401':
+           $ref: '#/components/responses/UnauthorizedError'
+           
+  /api/grader/logs:
+    get:
+      tags:
+        - lab-grader-api
+      summary: Get logs on id
+      parameters:
+        - in: query
+          description: Log id
+          name: log_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '401':
+           $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: No logs found
+          
+  /api/grader/authmod:
+    post:
+      tags:
+        - lab-grader-api
+      summary: Change login and password
+      requestBody:
+        description: New login and password
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/AuthParam' 
+      responses:
+        '401':
+           $ref: '#/components/responses/UnauthorizedError'
+
+components:
+  schemas:
+    LabsParam:
+      type: object
+      properties:
+        labsCount:
+          type: string
+        configFile:
+          type: string
+        dry-run:
+          type: boolean
+        logsVV:
+          type: boolean
+          
+    EmailsParam:
+      type: object
+      properties:
+        configFile:
+          type: string
+        dry-run:
+          type: boolean
+        logsVV:
+          type: boolean
+          
+    AuthParam:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      
+  responses:
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
+      headers:
+        WWW_Authenticate:
+          schema:
+            type: string
+      
+security:
+  - basicAuth: []

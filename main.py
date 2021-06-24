@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import logging
 import logging.config
 import mailbox
@@ -14,12 +12,16 @@ import sys
 import os
 import time
 import argparse
+import uuid
+
+import pytz
 
 import collections
 
 import mosspy
 from mossum import mossum
 
+# logger = logging.getLogger(__name__)
 
 # setup logging
 def setup_logging(
@@ -289,8 +291,6 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                 # check TASKID from logs
                 if common.get_task_id(log) != student_task_id and not course_config['labs'][lab_id].get('ignore-task-id', False):
                     spreadsheet.set_student_lab_status(student, lab_id_column, "?! Wrong TASKID!")
-                    print(common.get_task_id(log), student_task_id)
-                    print(log)
                 else:
                     # everything looks good, go on and update lab status
                     # calculate grade reduction coefficient
@@ -302,8 +302,12 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                     # calculate deadline penalty
                     student_dt = isoparse(completion_date)
                     penalty_suffix = ""
-                    if student_dt > deadlines[student['group']]:
-                        overdue = student_dt - deadlines[student['group']]
+                    # BUG: TypeError: can't compare offset-naive and offset-aware datetimes
+                    # if student_dt > deadlines[student['group']]:
+                    print(student_dt)
+                    print(deadlines[student['group']])
+                    if student_dt.replace(tzinfo=None) > deadlines[student['group']].replace(tzinfo=None):
+                        overdue = student_dt.replace(tzinfo=None) - deadlines[student['group']].replace(tzinfo=None)
                         penalty = math.ceil((overdue.days + overdue.seconds / 86400) / 7)
                         # TODO: check that penalty does not exceed maximum grade points for that lab
                         penalty = min(penalty, 
@@ -441,6 +445,153 @@ def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
     # raise NotImplementedError("This function is not implemented yet!")
 
 
+def setup_api_logging(default_level, logs_vv):
+    formatter = logging.Formatter("%(asctime)s - [%(levelname)s] -  %(name)s - (%(filename)s).%(funcName)s(%(lineno)d) - %(message)s")
+    root = logging.getLogger()
+    root.setLevel(default_level)
+        
+    streamHandler = logging.StreamHandler()
+    streamHandler.setFormatter(formatter)
+    streamHandler.setLevel(default_level)
+    root.addHandler(streamHandler)
+    
+    uuidFileName = ''
+    if logs_vv:
+        uuidFileName = str(uuid.uuid4())
+        fileHandler = logging.handlers.WatchedFileHandler(
+        os.environ.get("LOGFILE", "logs/" + uuidFileName + ".log"), 'w')
+        fileHandler.setFormatter(formatter)
+        fileHandler.setLevel(default_level)
+        root.addHandler(fileHandler)
+        
+    return uuidFileName
+    
+    
+def init(course_config, logs_vv):
+    base_loglevel = getattr(logging, 'WARNING')
+    verbosity = 2 if logs_vv else 0
+    loglevel = base_loglevel - (verbosity * 10)
+    uuid_log_id = setup_api_logging(loglevel, logs_vv)
+    logger = logging.getLogger()
+    
+    auth_config = 'auth.yaml'
+    try:
+        with open(auth_config, encoding="utf-8") as f:
+            config = yaml.load(f, Loader=yaml.SafeLoader)
+    except FileNotFoundError:
+        logger.warning("Authentication config file '%s' does not exist",
+            auth_config)
+        config = {}
+    # load course description
+    try:
+        with open('courses/' + course_config, encoding="utf-8") as f:
+            course_config = yaml.load(f, Loader=yaml.SafeLoader)
+    except FileNotFoundError:
+        logger.critical("Course config file '%s' does not exist",
+            course_config)
+        # course_config = {}
+        raise
+    else:
+        config.update(course_config)
+    if not config.get('auth'):
+        raise ValueError("No authentication data found in course config and auth config files")
+        
+    return [config, uuid_log_id]
+
+
+def spreadsheet_update(spreadsheet, data_update, config, dry_run):
+    logger = logging.getLogger()
+    # update Google SpreadSheet
+    if len(data_update) > 0:
+        info_sheet = config['course']['google']['info-sheet']
+        data_update.append({
+            'range': f"'{info_sheet}'!B1",
+            # 'majorDimension': dimension,
+            'values': [[datetime.datetime.now().isoformat()]]
+        })
+        logger.info("Data update: %s", data_update)
+        # print(data_update)
+        if not dry_run:
+            updated_cells = spreadsheet.batch_update()
+            if updated_cells != len(data_update):
+                raise ValueError(
+                    f"Number of updated cells ({updated_cells}) differs "
+                    "from expected ({len(data_update)})! Check the data "
+                    "manually. Data update: {data_update}")
+
+    
+def check_emails(course_config, dry_run, logs_vv):
+    [config, uuid_log_id] = init(course_config, logs_vv)
+    logger = logging.getLogger()
+
+    data_update = []
+    # connect to Google Sheets API
+    spreadsheet = google_sheets.GoogleSheet(config)
+    
+    # connect to IMAP
+    imap_conn = mailbox.get_imap_connection(config)
+    # process INBOX and update spreadsheet
+    data_update = update_students(
+        imap_conn, spreadsheet,
+        dry_run=dry_run,
+        valid_subjects=(
+            [config['course']['name']]
+            + config['course']['alt-names']),
+        email_config=config['auth']['email'],
+        return_address=config['course']['email'])
+    
+    spreadsheet_update(spreadsheet, data_update, config, dry_run)
+    
+    handlers = list(logger.handlers)
+    for hand in handlers:
+        logger.removeHandler(hand)
+        hand.flush()
+        hand.close()
+    
+    return uuid_log_id
+    
+
+def check_labs(labs_count, course_config, dry_run, logs_vv):
+    base_loglevel = getattr(logging, 'WARNING')
+    verbosity = 2 if logs_vv else 0
+    loglevel = base_loglevel - (verbosity * 10)
+    uuid_log_id = setup_api_logging(loglevel, logs_vv)
+    logger = logging.getLogger()
+    
+    [config, uuid_log_id] = init(course_config, logs_vv)
+    
+    data_update = []
+    # connect to Google Sheets API
+    spreadsheet = google_sheets.GoogleSheet(config)
+    # load data from Google Sheets
+    
+    if labs_count == 'all' or labs_count == '*':
+        labs_count = config['course']['labs'].keys()
+        
+    # check labs
+    for lab_id in labs_count:
+        data_update = check_lab(
+            lab_id, spreadsheet.sheets[:-1], spreadsheet,
+            course_config=config['course']
+        )
+        
+    spreadsheet_update(spreadsheet, data_update, config, dry_run)
+   
+    handlers = list(logger.handlers)
+    for hand in handlers:
+        logger.removeHandler(hand)
+        hand.flush()
+        hand.close()
+        
+    return uuid_log_id
+    
+    
+def getLogFile(uuid_log_id):
+    with open('logs/' + uuid_log_id + ".log") as f:
+        return f.read()
+    
+   
+
 def main():
     # parse command line parameters
     params = _parse_args()
@@ -453,10 +604,12 @@ def main():
     loglevel = base_loglevel - (params.verbosity * 10)
     setup_logging(params.logging_config, default_level=loglevel)
     logger = logging.getLogger(__name__)
+    print(params.verbosity)
+    
     # logger.setLevel(loglevel)
     # load authentication data
     try:
-        with open(params.authentication_config) as f:
+        with open(params.authentication_config, encoding="utf-8") as f:
             config = yaml.load(f, Loader=yaml.SafeLoader)
     except FileNotFoundError:
         logger.warning("Authentication config file '%s' does not exist",
@@ -464,7 +617,7 @@ def main():
         config = {}
     # load course description
     try:
-        with open(params.course_config) as f:
+        with open(params.course_config, encoding="utf-8") as f:
             course_config = yaml.load(f, Loader=yaml.SafeLoader)
     except FileNotFoundError:
         logger.critical("Course config file '%s' does not exist",
@@ -527,20 +680,6 @@ def main():
                         f"Number of updated cells ({updated_cells}) differs "
                         "from expected ({len(data_update)})! Check the data "
                         "manually. Data update: {data_update}")
-        # add all new repos to AppVeyor
-        if ("all" in params.update_action 
-            or "appveyor" in params.update_action
-        ):
-            new_projects = create_appveyor_projects(params.dry_run)
-            projects_count = len(new_projects)
-            if params.dry_run:
-                projects_msg_part = "" if projects_count == 1 else "s"
-                projects_msg_part += " would have been"
-            else:
-                projects_msg_part = " was" if projects_count == 1 else "s were"
-            logger.info("%d new AppVeyour project%s "
-                  "added: %s", projects_count, projects_msg_part, ';'.join(new_projects))
-        # close IMAP connections
         try:
             imap_conn.close()
             imap_conn.logout()

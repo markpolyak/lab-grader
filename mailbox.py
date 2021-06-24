@@ -45,6 +45,7 @@ def get_imap_connection(config):
     :returns: connection instance
     """
     logger = logging.getLogger(__name__)
+    # print(config['auth']['email']['imap']['server'])
     connection = imaplib.IMAP4_SSL(
         # settings.mail_imap_server,
         # str(settings.mail_imap_port)
