@@ -844,3 +844,62 @@ def github_get_latest_commit_date(repo):
     pushed_at = json.loads(res.content).get("pushed_at")
     return datetime.datetime.fromisoformat(pushed_at.replace("Z", "+00:00"))
 
+# get last commit from github
+def get_last_commit_sha(repo, verbose=False):
+    request_headers = {
+        "User-Agent": "GitHubRepoLister/1.0",
+        "Authorization": "token " + settings.github_token,
+    }
+
+    if verbose:
+        sys.stdout.write('.')
+        sys.stdout.flush()
+        
+    res = requests_retry_session().get(
+        "https://api.github.com/repos/{}/commits/master".format(
+            repo
+        ),
+        headers=request_headers,
+        timeout=settings.requests_timeout
+    )
+    if res.status_code != 200:
+        raise Exception("Failed to load last commit from GitHub: " + res.content)
+        # exit(1)
+    return json.loads(res.content).get("sha")
+
+
+# get files sha from github
+def get_github_files_sha(repo, recursive=False, verbose=False):
+    file2sha = {}
+    commitSHA = get_last_commit_sha(repo, verbose)
+    request_headers = {
+        "User-Agent": "GitHubRepoLister/1.0",
+        "Authorization": "token " + settings.github_token,
+    }
+    url = "https://api.github.com/repos/{}/git/trees/{}".format(
+            repo, commitSHA
+        )
+    if recursive:
+        url += "?recursive=True"
+
+    if verbose:
+        sys.stdout.write('.')
+        sys.stdout.flush()
+
+    res = requests_retry_session().get(
+        url,
+        headers=request_headers,
+        timeout=settings.requests_timeout
+    )
+    if res.status_code != 200:
+        raise Exception("Failed to load files hash from GitHub: " + res.content)
+        # exit(1)
+    file = json.loads(res.content).get("tree")
+
+    if verbose:
+        sys.stdout.write('\n')
+
+    for value in file:
+        file2sha[value["path"]] = value["sha"]
+
+    return file2sha
