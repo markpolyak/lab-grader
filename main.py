@@ -314,6 +314,19 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                         # print(f"{overdue}, {penalty}")
                     # update status
                     lab_status = "v{}{}".format(grade_reduction_suffix, penalty_suffix)
+
+                    if 'files-sha' not in course_config['course']['labs'][lab_id]:
+                        logger.warning("files-sha not specified for lab_id %s",lab_id)
+                        continue
+
+                    files2sha = common.get_github_files_sha(repo, recursive=True)
+                    for key, value in course_config['course']['labs'][lab_id]['files-sha'].items():
+                        if key not in files2sha:
+                            logger.warning("file '%s' not found in repository", key) 
+                            continue
+                        if files2sha[key] != value:
+                            lab_status += " ?! Tests modified"
+                            
                     logger.debug("New status for lab '%s' by student '%s' is '%s' from CI service '%s'", lab_id, student, lab_status, ci_service)
                     spreadsheet.set_student_lab_status(
                         student, lab_id_column, lab_status,
@@ -553,7 +566,6 @@ def main():
                 lab_id, "lab{}".format(lab_id), 
                 moss_user_id=config['auth']['moss']['user-id'],
                 course_config=config['course'])
-
-
+                
 if __name__ == '__main__':
     main()
