@@ -52,26 +52,6 @@ class AbstractCIAdapter:
         """
         pass
 
-    def get_file(self, repo, filepath) -> str:
-        """
-        Retrieves a single file from the VCS.
-
-        :param repo: a repository;
-        :param filepath: path to the file to be retrieved;
-        :returns: file contents as a byte string.
-        """
-        pass
-
-    def get_latest_commit_date(self, repo) -> datetime:
-        """
-        Returns the timestamp of the latest commit made to the given
-        repository.
-
-        :param repo: a repository;
-        :returns: the date and time of the latest commit.
-        """
-        pass
-
               
 class Repo:
     """
