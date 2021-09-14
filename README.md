@@ -7,8 +7,12 @@ API specification is written in *SUAI-lab_grader_rest_api-1.2.0-swagger.yaml*
 
 ## Install
 ```shell
+# local
 pip install git+https://github.com/hjalti/mossum@master
 pip install .
+
+# docker(server mode)
+docker-compose up -d
 ```
 
 ## Usage
