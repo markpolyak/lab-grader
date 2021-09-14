@@ -10,13 +10,13 @@ servers:
   - url: 'http://localhost:8080'
   
 tags:
-  - name: lab-grader-api
+  - name: lab_grader-api
   
 paths:
   /api/grader/labs:
     post:
       tags:
-        - lab-grader-api
+        - lab_grader-api
       summary: Check labs
       requestBody:
         description: Check labs params
@@ -38,7 +38,7 @@ paths:
   /api/grader/email:
     post:
       tags:
-        - lab-grader-api
+        - lab_grader-api
       summary: Check emails
       requestBody:
         description: Check emails params
@@ -60,7 +60,7 @@ paths:
   /api/grader/logs:
     get:
       tags:
-        - lab-grader-api
+        - lab_grader-api
       summary: Get logs on id
       parameters:
         - in: query
@@ -78,7 +78,7 @@ paths:
   /api/grader/authmod:
     post:
       tags:
-        - lab-grader-api
+        - lab_grader-api
       summary: Change login and password
       requestBody:
         description: New login and password

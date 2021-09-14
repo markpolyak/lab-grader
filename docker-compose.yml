@@ -1,0 +1,24 @@
+version: '3.8'
+
+networks:
+  grader-net:
+
+services:
+  lab-grader-backend:
+    image: lab-grader:dev
+    build:
+      context: .
+      dockerfile: build-context/Dockerfile
+    environment:
+      GRADER_AUTH_CONFIG: /opt/grader/configs/app/auth.yml
+      GRADER_LOGGER_CONFIG: /opt/grader/configs/app/logging.yml
+      GRADER_COURSE_CONFIGS_PATH: /opt/grader/configs/courses
+    volumes:
+      - type: bind
+        source: ./static
+        target: /opt/grader/configs
+    ports:
+      - target: 8080
+        published: 8080
+    networks:
+      - grader-net

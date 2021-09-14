@@ -1,5 +1,5 @@
 ---
-# Configuration file for lab-grader
+# Configuration file for lab_grader
 
 course:
     name: Mathematical software
