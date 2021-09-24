@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.8'
 
 networks:
   grader-net:
@@ -29,8 +29,5 @@ services:
       - type: bind
         source: ./static
         target: /opt/grader/configs
-    ports:
-      - target: 8080
-        published: 8080
     networks:
       - grader-net
