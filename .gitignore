@@ -1,4 +1,4 @@
-nginx/.htpasswd.template
+**/.htpasswd
 
 # macOS Files
 .DS_Store
