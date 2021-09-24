@@ -15,4 +15,4 @@ class PathConfig:
         self.auth_config = os.getenv('GRADER_AUTH_CONFIG', '../static/app/auth.yml')
         self.logger_config = os.getenv('GRADER_LOGGER_CONFIG', '../static/app/logging.yml')
         self.courses_path = os.getenv('GRADER_COURSE_CONFIGS_PATH', '../static/courses')
-        self.log_path = os.getenv('GRADER_LOG_PATH', '../logs/')
+        self.log_path = os.getenv('GRADER_LOG_PATH', '../logs')
