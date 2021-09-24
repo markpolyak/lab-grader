@@ -29,8 +29,5 @@ services:
       - type: bind
         source: ./static
         target: /opt/grader/configs
-    ports:
-      - target: 8080
-        published: 8080
     networks:
       - grader-net
