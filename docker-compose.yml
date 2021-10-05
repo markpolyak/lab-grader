@@ -22,12 +22,15 @@ services:
       context: .
       dockerfile: build-context/Dockerfile
     environment:
-      GRADER_AUTH_CONFIG: /opt/grader/configs/app/auth.yml
-      GRADER_LOGGER_CONFIG: /opt/grader/configs/app/logging.yml
+      GRADER_AUTH_CONFIG: /opt/grader/configs/app/auth.yaml
+      GRADER_LOGGER_CONFIG: /opt/grader/configs/app/logging.yaml
       GRADER_COURSE_CONFIGS_PATH: /opt/grader/configs/courses
     volumes:
       - type: bind
         source: ./static
         target: /opt/grader/configs
+      - type: bind
+        source: ./logs
+        target: /opt/grader/logs
     networks:
       - grader-net

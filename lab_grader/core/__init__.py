@@ -26,19 +26,19 @@ class Grader:
     config = dict()
 
     def __init__(self, course_config=None, dry_run=False, logs_vv=None):
+        self.dry_run = dry_run
+        self.logs_vv = logs_vv
         self.paths = PathConfig()
         self.__auth_config = load_config(path_to_yaml=self.paths.auth_config)
         self.course_config = course_config
         self.__class__.config.update(self.__auth_config)
         if self.course_config or not isinstance(course_config, dict):
-            self.course_config = load_config(path_to_yaml="{}/{}".format(self.paths.courses_path, course_config))
+            self.course_config = load_config(path_to_yaml="{}/{}".format(self.paths.courses_path, course_config))['course']
             self.__class__.config.update(self.course_config)
         else:
             raise ValueError("Expect course config as dict")
         self.api = ServicesApi(auth_config=self.__auth_config)
         self.logfile_uuid = self.__setup_logging()
-        self.dry_run = dry_run
-        self.logs_vv = logs_vv
 
     # config getter for external methods
     def get_config(self) -> dict:
@@ -459,7 +459,7 @@ class Grader:
         base_loglevel = getattr(logging, 'WARNING')
         verbosity = 2 if self.logs_vv else 0
         loglevel = base_loglevel - (verbosity * 10)
-        logger = logging.getLogger(loglevel)
+        logger = logging.getLogger()
 
         data_update = []
         # connect to Google Sheets API

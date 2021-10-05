@@ -1,0 +1,109 @@
+course:
+  name: Operating systems
+  alt_names:
+    - "OS"
+    - "Операционные системы"
+    - "ОС"
+  semester: Spring 2021
+  email: k43guap@ya.ru
+  timezone: MSK
+  github:
+    organization: suai-os-2021
+    teacher_github_logins:
+      - "Mark Polyak"
+      - "markpolyak"
+  google:
+    spreadsheet: 1HHWkB-IemQqBkhLLao15AG4xOobg-ELWsDn-HtJP_-A
+    info-sheet: График
+    task-id-column: 0
+    student-name-column: 1
+    lab-column-offset: 1
+  labs:
+    "0":
+      github-prefix: os-task0
+      short-name: ЛР0
+      taskid-max: 20
+      penalty-max: 6
+      # ignore-task-id: True
+      ci:
+        - workflows
+      files:
+        - typescript
+      moss:
+        language: c
+        max-matches: 1000
+    "1":
+      github-prefix: os-task1
+      short-name: ЛР1
+      taskid-max: 20
+      penalty-max: 6
+      ci:
+        - travis
+        - workflows
+      files:
+        - lab1.sh
+      moss:
+        language: c
+        max-matches: 1000
+        basefiles:
+          - repo: k43guap/os-course-task1
+            filename: lab1.sh
+    "2":
+      github-prefix: os-task2
+      short-name: ЛР2
+      taskid-max: 20
+      taskid-shift: 4
+      penalty-max: 8
+      ci:
+        - workflows
+      files:
+        - lab2.cpp
+      moss:
+        language: cc
+        max-matches: 100
+        basefiles:
+          - repo: k43guap/os-course-task2
+            filename: lab2.cpp
+          - repo: k43guap/os-course-task2
+            filename: examples/ex3.cpp
+    "3":
+      github-prefix: os-task3
+      short-name: ЛР3
+      taskid-max: 20
+      penalty-max: 8
+      ci:
+        - workflows
+      files:
+        - lab3.cpp
+      moss:
+        language: cc
+        max-matches: 100
+        basefiles:
+          - repo: k43guap/os-course-task3
+            filename: lab3.cpp
+    "4":
+      github-prefix: os-task4
+      short-name: ЛР4
+      taskid-max: 30
+      penalty-max: 10
+      ci:
+        - workflows
+      files:
+        - lab4.cpp
+      moss:
+        language: cc
+        max-matches: 100
+        basefiles:
+          - repo: k43guap/os-course-task4
+            filename: lab4.cpp
+    "5":
+      github-prefix: os-task5
+      short-name: ЛР5
+      taskid-max: 30
+      penalty-max: 8
+      ignore-completion-date: True
+    "6":
+      github-prefix: os-task5
+      short-name: ЛР6
+      taskid-max: 30
+      penalty-max: 7

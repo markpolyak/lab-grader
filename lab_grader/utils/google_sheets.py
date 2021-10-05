@@ -3,7 +3,7 @@ import logging
 import pickle
 import os.path
 from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
 # If modifying these scopes, delete the file token.pickle.
@@ -27,12 +27,12 @@ class GoogleSheet:
         :param config: a course config
         """
         # read config params
-        self.credentials_file = config['auth']['google']['credentials-file']
-        self.spreadsheet_id = config['course']['google']['spreadsheet']
-        self.task_id_column = config['course']['google'].get('task-id-column', self.DEFAULT_TASK_ID_COLUMN)
-        self.student_name_column = config['course']['google'].get('student-name-column',
+        self.credentials_file = config['auth']['google']['credentials']
+        self.spreadsheet_id = config['google']['spreadsheet']
+        self.task_id_column = config['google'].get('task-id-column', self.DEFAULT_TASK_ID_COLUMN)
+        self.student_name_column = config['google'].get('student-name-column',
                                                                   self.DEFAULT_STUDENT_NAME_COLUMN)
-        self.lab_column_offset = config['course']['google'].get('lab-column-offset', self.DEFAULT_LAB_COLUMN_OFFSET)
+        self.lab_column_offset = config['google'].get('lab-column-offset', self.DEFAULT_LAB_COLUMN_OFFSET)
         # create a new API instance to work with the spreadsheet
         self.spreadsheet = self.__get_spreadsheet_instance()
         # load sheet names
@@ -74,9 +74,7 @@ class GoogleSheet:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    self.credentials_file, SCOPES)
-                creds = flow.run_local_server(port=0)
+                creds = service_account.Credentials.from_service_account_file(self.credentials_file, scopes=SCOPES)
             # Save the credentials for the next run
             with open('token.pickle', 'wb') as token:
                 pickle.dump(creds, token)

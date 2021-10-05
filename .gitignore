@@ -1,4 +1,6 @@
 **/.htpasswd
+**/auth.yaml
+**/google-credential.json
 
 # macOS Files
 .DS_Store
