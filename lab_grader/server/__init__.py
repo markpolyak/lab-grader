@@ -12,7 +12,7 @@ def check_labs():
 
 @route('/api/grader/labs', method='GET')
 def check_labs():
-    return Grader(course_config='example-course-config.yaml', dry_run=True, logs_vv=True).check_labs(labs_count='all')
+    return Grader(course_config='example-course-config.yaml', dry_run=False, logs_vv=True).check_labs(labs_count=["2"])
 
 @route('/api/grader/email', method='POST')
 def check_emails():

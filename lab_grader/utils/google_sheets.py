@@ -412,8 +412,9 @@ class GoogleSheet:
             'values': [[value]]
         })
         # print("Pending write operation: {} @ {}".format(data_update[-1]['values'], data_update[-1]['range']))
-        logging.getLogger(__name__).info("Pending write operation: %s @ %s", self.data_update[-1]['values'],
-                                         self.data_update[-1]['range'])
+        logging.getLogger(__name__).info(
+            "Pending write operation: %s @ %s", self.data_update[-1]['values'], self.data_update[-1]['range']
+        )
         return self.data_update
 
     def batch_update(self):
