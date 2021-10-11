@@ -72,6 +72,7 @@ course:
       short-name: ЛР3
       taskid-max: 20
       penalty-max: 8
+      ignore-task-id: True
       ci:
         - workflows
       files:
@@ -87,6 +88,7 @@ course:
       short-name: ЛР4
       taskid-max: 30
       penalty-max: 10
+      ignore-task-id: True
       ci:
         - workflows
       files:

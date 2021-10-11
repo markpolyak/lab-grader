@@ -10,7 +10,8 @@ def check_labs():
     config = request.json.get('config')
     dry_run = request.json.get('dry_run')
     logs_vv = request.json.get('logs_vv')
-    response.content_type = 'application/json'
+    response.content_type = 'application/json'#todo async
+
     return dumps(Grader(course_config=config, dry_run=dry_run, logs_vv=logs_vv).check_labs(labs_count=labs_count))
 
 
@@ -20,6 +21,7 @@ def check_emails():
     dry_run = request.json.get('dry_run')
     logs_vv = request.json.get('logs_vv')
     response.content_type = 'application/json'
+    # todo async
     return dumps(Grader(course_config=config, dry_run=dry_run, logs_vv=logs_vv).check_emails())
 
 
@@ -40,14 +42,14 @@ def run_grader_server(instance):
     run(host=host, port=port, debug=True, catchall=False)
 
 
-# todo
+# todo ВСе доступные логи
 @route('/api/v1/logs', method='GET')
 def get_logs():
     response.content_type = 'application/json'
     return dumps(["16f0f720-0ae6-468b-af3c-7c4bc919a56e", ])
 
 
-# todo
+# todo ВСе доступные конфиги
 @route('/api/v1/configs', method='GET')
 def get_logs():
     response.content_type = 'application/json'

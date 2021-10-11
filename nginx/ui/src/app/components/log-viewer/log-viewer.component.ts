@@ -19,6 +19,9 @@ export class LogViewerComponent implements OnDestroy {
   intervalId: number;
 
   @Input()
+  period: number = 200;
+
+  @Input()
   set file(file: string) {
 
     this.file$.next(file);
@@ -42,9 +45,6 @@ export class LogViewerComponent implements OnDestroy {
       );
     }
   }
-
-  @Input()
-  period: number = 1000;
 
   constructor(readonly http: HttpClient) {
 
