@@ -5,7 +5,10 @@ networks:
 
 services:
   nginx:
-    image: nginx:1.21.3-alpine
+    image: nginx:dev
+    build:
+      context: nginx
+      dockerfile: Dockerfile
     volumes:
       - type: bind
         source: ./nginx

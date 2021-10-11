@@ -1,0 +1,16 @@
+<header class="header">
+  <mat-toolbar color="primary">
+    <span>Lab grader UI</span>
+  </mat-toolbar>
+</header>
+<div class="main">
+  <mat-nav-list class="navigation">
+    <a mat-list-item [routerLink]="['/logs']" routerLinkActive="active">Logs</a>
+    <a mat-list-item [routerLink]="['/emails']" routerLinkActive="active"> Check emails</a>
+    <a mat-list-item [routerLink]="['/labs']" routerLinkActive="active"> Check labs</a>
+  </mat-nav-list>
+  <div class="outlet">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+<footer></footer>

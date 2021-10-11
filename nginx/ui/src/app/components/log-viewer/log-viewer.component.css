@@ -1,0 +1,29 @@
+.log-viewer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden
+}
+
+.log {
+  height: calc(100% - 32px);
+  margin: 0;
+  background: black;
+  color: whitesmoke;
+  padding: 16px;
+  box-sizing: border-box;
+  overflow: scroll;
+  font-size: 12px;
+}
+
+.error {
+  height: 32px;
+  max-height: 32px;
+  line-height: 32px;
+  color: tomato;
+}
+
+.center {
+  align-self: center;
+  margin: auto;
+}

@@ -1,0 +1,30 @@
+<div class="logs-page">
+  <div class="list">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Logs list</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-action-list>
+          <mat-list-item (click)="selectLog(log)" *ngFor="let log of logs$ | async">
+            <button mat-raised-button [color]=" selected === log ? 'accent' : 'primary'">
+            {{log}}
+          </button>
+          </mat-list-item>
+        </mat-action-list>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  <div class="divider"></div>
+  <div class="log">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Live log viewer</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <log-viewer [file]="selected"></log-viewer>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+

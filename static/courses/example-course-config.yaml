@@ -58,6 +58,7 @@ course:
         - workflows
       files:
         - lab2.cpp
+      ignore-task-id: True
       moss:
         language: cc
         max-matches: 100

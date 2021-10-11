@@ -1,0 +1,53 @@
+:host {
+  height: 100%;
+  flex: 1 0 0;
+  display: flex;
+}
+
+.logs-page {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: stretch;
+}
+
+.divider {
+  min-width: 32px;
+  width: 32px;
+  max-width: 32px;
+}
+
+.list {
+  flex: 1 1 0;
+  min-width: 420px;
+  max-width: 420px;
+}
+
+.list mat-card-content {
+
+  height: calc(100% - 32px);
+  overflow: auto;
+}
+
+mat-list-item button {
+  width: 100%;
+}
+
+.log {
+  max-width: calc(100% - 452px);
+  flex: 2 1 0;
+  align-self: stretch;
+}
+
+.field {
+  width: 100%;
+}
+
+mat-card {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.log mat-card-content {
+  height: calc(100% - 48px);
+}
