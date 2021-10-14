@@ -12,5 +12,5 @@ RUN ng build
 FROM ${FROM_IMAGE}:${FROM_VERSION}-alpine
 
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY .htpasswd.template /etc/nginx/.htpasswd
+COPY .htpasswd /etc/nginx/.htpasswd
 COPY --from=build /usr/src/app/dist /usr/share/nginx/html

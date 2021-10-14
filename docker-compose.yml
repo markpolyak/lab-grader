@@ -28,6 +28,7 @@ services:
       GRADER_AUTH_CONFIG: /opt/grader/configs/app/auth.yaml
       GRADER_LOGGER_CONFIG: /opt/grader/configs/app/logging.yaml
       GRADER_COURSE_CONFIGS_PATH: /opt/grader/configs/courses
+      GRADER_LOG_PATH: /opt/grader/logs
     volumes:
       - type: bind
         source: ./static

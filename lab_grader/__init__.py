@@ -1,6 +1,7 @@
 import os
 import yaml
 
+
 def load_config(path_to_yaml: str) -> dict:
     try:
         with open(path_to_yaml, encoding="utf-8", mode='r') as stream:
@@ -8,6 +9,7 @@ def load_config(path_to_yaml: str) -> dict:
             return config
     except (FileNotFoundError, yaml.YAMLError) as exp:
         raise exp
+
 
 class PathConfig:
     def __init__(self):

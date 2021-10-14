@@ -3,6 +3,13 @@ from lab_grader import PathConfig
 from bottle import auth_basic, request, route, run, get, HTTPError, response
 from json import dumps
 
+from os import listdir
+from os.path import isfile, join
+
+from threading import Thread
+
+paths = PathConfig()
+
 
 @route('/api/v1/labs', method='POST')
 def check_labs():
@@ -10,9 +17,13 @@ def check_labs():
     config = request.json.get('config')
     dry_run = request.json.get('dry_run')
     logs_vv = request.json.get('logs_vv')
-    response.content_type = 'application/json'#todo async
+    response.content_type = 'application/json'
 
-    return dumps(Grader(course_config=config, dry_run=dry_run, logs_vv=logs_vv).check_labs(labs_count=labs_count))
+    grader = Grader(course_config=config, dry_run=dry_run, logs_vv=logs_vv)
+    thread = Thread(target=grader.check_labs, args=(labs_count,))
+    thread.start()
+
+    return dumps(grader.logfile_uuid)
 
 
 @route('/api/v1/emails', method='POST')
@@ -21,8 +32,12 @@ def check_emails():
     dry_run = request.json.get('dry_run')
     logs_vv = request.json.get('logs_vv')
     response.content_type = 'application/json'
-    # todo async
-    return dumps(Grader(course_config=config, dry_run=dry_run, logs_vv=logs_vv).check_emails())
+
+    grader = Grader(course_config=config, dry_run=dry_run, logs_vv=logs_vv)
+    thread = Thread(target=grader.check_emails)
+    thread.start()
+
+    return dumps(grader.logfile_uuid)
 
 
 @route('/api/v1/logs/<file_id>', method='GET')
@@ -42,15 +57,15 @@ def run_grader_server(instance):
     run(host=host, port=port, debug=True, catchall=False)
 
 
-# todo ВСе доступные логи
 @route('/api/v1/logs', method='GET')
 def get_logs():
     response.content_type = 'application/json'
-    return dumps(["16f0f720-0ae6-468b-af3c-7c4bc919a56e", ])
+    logs = [f.replace(".log", "") for f in listdir(paths.log_path) if f.find(".log") > -1]
+    return dumps(logs)
 
 
-# todo ВСе доступные конфиги
 @route('/api/v1/configs', method='GET')
-def get_logs():
+def get_configs():
     response.content_type = 'application/json'
-    return dumps(["example-course-config.yaml",])
+    configs = [f for f in listdir(paths.courses_path) if f.find(".yaml") > -1]
+    return dumps(configs)
