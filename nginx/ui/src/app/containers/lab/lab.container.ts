@@ -49,7 +49,13 @@ export class LabContainer {
 
   startHandler() {
 
-    this.http.post<string>('/api/v1/labs', {...this.formGroup.value, labs_count: [this.formGroup.value.labs_count]})
+    let labsCount: string | string[] = this.formGroup.getRawValue().labs_count;
+    if (labsCount !== 'all') {
+      labsCount = (labsCount as string).split(/;|,|\s+/)
+        .map((lab: string) => lab.trim())
+        .filter((lab: string) => lab.length);
+    }
+    this.http.post<string>('/api/v1/labs', {...this.formGroup.value, labs_count: labsCount})
       .pipe(
         catchError((error) => {
           alert(error.error);
