@@ -19,7 +19,7 @@ export class LogViewerComponent implements OnDestroy {
   intervalId: number;
 
   @Input()
-  period: number = 200;
+  period: number = 333;
 
   @Input()
   set file(file: string) {
