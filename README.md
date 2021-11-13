@@ -3,7 +3,7 @@ universal lab grader for university courses
 
 ## Description
 REST API is developed using Bottle framework. Works with Python 3.9  
-API specification is written in *SUAI-lab_grader_rest_api-1.2.0-swagger.yaml*
+API specification is written in the [swagger.yml](SUAI-lab_grader_rest_api-1.2.0-swagger.yaml)
 
 Frontend is developed using Angular 12.
 
