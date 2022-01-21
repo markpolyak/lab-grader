@@ -1,0 +1,476 @@
+[
+  {
+    "sha": "813c5d6ec32820e48ad6946d6de628a7b7eb9931",
+    "node_id": "MDY6Q29tbWl0MjY1NzIwMzY5OjgxM2M1ZDZlYzMyODIwZTQ4YWQ2OTQ2ZDZkZTYyOGE3YjdlYjk5MzE=",
+    "commit": {
+      "author": {
+        "name": "Konstantin Stepanov",
+        "email": "kamael-sp@mail.ru",
+        "date": "2020-06-03T08:59:27Z"
+      },
+      "committer": {
+        "name": "Konstantin Stepanov",
+        "email": "kamael-sp@mail.ru",
+        "date": "2020-06-03T08:59:27Z"
+      },
+      "message": "#3 #4 Requested changes after review implemented",
+      "tree": {
+        "sha": "8829f963dfe2d247b516b76d75beaf16320e02cf",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/git/trees/8829f963dfe2d247b516b76d75beaf16320e02cf"
+      },
+      "url": "https://api.github.com/repos/markpolyak/lab-grader/git/commits/813c5d6ec32820e48ad6946d6de628a7b7eb9931",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/813c5d6ec32820e48ad6946d6de628a7b7eb9931",
+    "html_url": "https://github.com/markpolyak/lab-grader/commit/813c5d6ec32820e48ad6946d6de628a7b7eb9931",
+    "comments_url": "https://api.github.com/repos/markpolyak/lab-grader/commits/813c5d6ec32820e48ad6946d6de628a7b7eb9931/comments",
+    "author": {
+      "login": "nphl",
+      "id": 15202603,
+      "node_id": "MDQ6VXNlcjE1MjAyNjAz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15202603?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/nphl",
+      "html_url": "https://github.com/nphl",
+      "followers_url": "https://api.github.com/users/nphl/followers",
+      "following_url": "https://api.github.com/users/nphl/following{/other_user}",
+      "gists_url": "https://api.github.com/users/nphl/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/nphl/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/nphl/subscriptions",
+      "organizations_url": "https://api.github.com/users/nphl/orgs",
+      "repos_url": "https://api.github.com/users/nphl/repos",
+      "events_url": "https://api.github.com/users/nphl/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/nphl/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "nphl",
+      "id": 15202603,
+      "node_id": "MDQ6VXNlcjE1MjAyNjAz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15202603?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/nphl",
+      "html_url": "https://github.com/nphl",
+      "followers_url": "https://api.github.com/users/nphl/followers",
+      "following_url": "https://api.github.com/users/nphl/following{/other_user}",
+      "gists_url": "https://api.github.com/users/nphl/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/nphl/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/nphl/subscriptions",
+      "organizations_url": "https://api.github.com/users/nphl/orgs",
+      "repos_url": "https://api.github.com/users/nphl/repos",
+      "events_url": "https://api.github.com/users/nphl/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/nphl/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "582e3062b7957941ede75d950a5cd8a9c082f491",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/582e3062b7957941ede75d950a5cd8a9c082f491",
+        "html_url": "https://github.com/markpolyak/lab-grader/commit/582e3062b7957941ede75d950a5cd8a9c082f491"
+      }
+    ]
+  },
+  {
+    "sha": "582e3062b7957941ede75d950a5cd8a9c082f491",
+    "node_id": "MDY6Q29tbWl0MjY1NzIwMzY5OjU4MmUzMDYyYjc5NTc5NDFlZGU3NWQ5NTBhNWNkOGE5YzA4MmY0OTE=",
+    "commit": {
+      "author": {
+        "name": "Konstantin Stepanov",
+        "email": "kamael-sp@mail.ru",
+        "date": "2020-05-29T10:43:39Z"
+      },
+      "committer": {
+        "name": "Konstantin Stepanov",
+        "email": "kamael-sp@mail.ru",
+        "date": "2020-05-29T10:43:39Z"
+      },
+      "message": "#3 #4 Add docs for Grade Reduction method. Replaced lab checking.",
+      "tree": {
+        "sha": "8d0123a3e5aa473a0c958ba77b6f06966913aa1b",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/git/trees/8d0123a3e5aa473a0c958ba77b6f06966913aa1b"
+      },
+      "url": "https://api.github.com/repos/markpolyak/lab-grader/git/commits/582e3062b7957941ede75d950a5cd8a9c082f491",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/582e3062b7957941ede75d950a5cd8a9c082f491",
+    "html_url": "https://github.com/markpolyak/lab-grader/commit/582e3062b7957941ede75d950a5cd8a9c082f491",
+    "comments_url": "https://api.github.com/repos/markpolyak/lab-grader/commits/582e3062b7957941ede75d950a5cd8a9c082f491/comments",
+    "author": {
+      "login": "nphl",
+      "id": 15202603,
+      "node_id": "MDQ6VXNlcjE1MjAyNjAz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15202603?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/nphl",
+      "html_url": "https://github.com/nphl",
+      "followers_url": "https://api.github.com/users/nphl/followers",
+      "following_url": "https://api.github.com/users/nphl/following{/other_user}",
+      "gists_url": "https://api.github.com/users/nphl/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/nphl/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/nphl/subscriptions",
+      "organizations_url": "https://api.github.com/users/nphl/orgs",
+      "repos_url": "https://api.github.com/users/nphl/repos",
+      "events_url": "https://api.github.com/users/nphl/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/nphl/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "nphl",
+      "id": 15202603,
+      "node_id": "MDQ6VXNlcjE1MjAyNjAz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15202603?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/nphl",
+      "html_url": "https://github.com/nphl",
+      "followers_url": "https://api.github.com/users/nphl/followers",
+      "following_url": "https://api.github.com/users/nphl/following{/other_user}",
+      "gists_url": "https://api.github.com/users/nphl/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/nphl/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/nphl/subscriptions",
+      "organizations_url": "https://api.github.com/users/nphl/orgs",
+      "repos_url": "https://api.github.com/users/nphl/repos",
+      "events_url": "https://api.github.com/users/nphl/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/nphl/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "4f8e7e50feaa71f21098dd39db9d7bde90ee97e8",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/4f8e7e50feaa71f21098dd39db9d7bde90ee97e8",
+        "html_url": "https://github.com/markpolyak/lab-grader/commit/4f8e7e50feaa71f21098dd39db9d7bde90ee97e8"
+      }
+    ]
+  },
+  {
+    "sha": "4f8e7e50feaa71f21098dd39db9d7bde90ee97e8",
+    "node_id": "MDY6Q29tbWl0MjY1NzIwMzY5OjRmOGU3ZTUwZmVhYTcxZjIxMDk4ZGQzOWRiOWQ3YmRlOTBlZTk3ZTg=",
+    "commit": {
+      "author": {
+        "name": "Konstantin Stepanov",
+        "email": "kamael-sp@mail.ru",
+        "date": "2020-05-27T20:06:06Z"
+      },
+      "committer": {
+        "name": "Konstantin Stepanov",
+        "email": "kamael-sp@mail.ru",
+        "date": "2020-05-27T20:06:06Z"
+      },
+      "message": "#4 Grade coefficient calculation based on commit and issue requirements implemented",
+      "tree": {
+        "sha": "9a9ef23fcb5af95b20817d9a0e0fb2f4f9ce99cc",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/git/trees/9a9ef23fcb5af95b20817d9a0e0fb2f4f9ce99cc"
+      },
+      "url": "https://api.github.com/repos/markpolyak/lab-grader/git/commits/4f8e7e50feaa71f21098dd39db9d7bde90ee97e8",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/4f8e7e50feaa71f21098dd39db9d7bde90ee97e8",
+    "html_url": "https://github.com/markpolyak/lab-grader/commit/4f8e7e50feaa71f21098dd39db9d7bde90ee97e8",
+    "comments_url": "https://api.github.com/repos/markpolyak/lab-grader/commits/4f8e7e50feaa71f21098dd39db9d7bde90ee97e8/comments",
+    "author": {
+      "login": "nphl",
+      "id": 15202603,
+      "node_id": "MDQ6VXNlcjE1MjAyNjAz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15202603?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/nphl",
+      "html_url": "https://github.com/nphl",
+      "followers_url": "https://api.github.com/users/nphl/followers",
+      "following_url": "https://api.github.com/users/nphl/following{/other_user}",
+      "gists_url": "https://api.github.com/users/nphl/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/nphl/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/nphl/subscriptions",
+      "organizations_url": "https://api.github.com/users/nphl/orgs",
+      "repos_url": "https://api.github.com/users/nphl/repos",
+      "events_url": "https://api.github.com/users/nphl/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/nphl/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "nphl",
+      "id": 15202603,
+      "node_id": "MDQ6VXNlcjE1MjAyNjAz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15202603?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/nphl",
+      "html_url": "https://github.com/nphl",
+      "followers_url": "https://api.github.com/users/nphl/followers",
+      "following_url": "https://api.github.com/users/nphl/following{/other_user}",
+      "gists_url": "https://api.github.com/users/nphl/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/nphl/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/nphl/subscriptions",
+      "organizations_url": "https://api.github.com/users/nphl/orgs",
+      "repos_url": "https://api.github.com/users/nphl/repos",
+      "events_url": "https://api.github.com/users/nphl/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/nphl/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "b38f3202085f2142453a903829736fc9bbafc139",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/b38f3202085f2142453a903829736fc9bbafc139",
+        "html_url": "https://github.com/markpolyak/lab-grader/commit/b38f3202085f2142453a903829736fc9bbafc139"
+      }
+    ]
+  },
+  {
+    "sha": "b38f3202085f2142453a903829736fc9bbafc139",
+    "node_id": "MDY6Q29tbWl0MjY1NzIwMzY5OmIzOGYzMjAyMDg1ZjIxNDI0NTNhOTAzODI5NzM2ZmM5YmJhZmMxMzk=",
+    "commit": {
+      "author": {
+        "name": "Konstantin Stepanov",
+        "email": "kamael-sp@mail.ru",
+        "date": "2020-05-21T18:52:00Z"
+      },
+      "committer": {
+        "name": "Konstantin Stepanov",
+        "email": "kamael-sp@mail.ru",
+        "date": "2020-05-21T18:52:00Z"
+      },
+      "message": "#3 Grade reduction by percent in logs implemented",
+      "tree": {
+        "sha": "ab1e760438b1401087080dc2a8bd1b8cd9d5a3fa",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/git/trees/ab1e760438b1401087080dc2a8bd1b8cd9d5a3fa"
+      },
+      "url": "https://api.github.com/repos/markpolyak/lab-grader/git/commits/b38f3202085f2142453a903829736fc9bbafc139",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/b38f3202085f2142453a903829736fc9bbafc139",
+    "html_url": "https://github.com/markpolyak/lab-grader/commit/b38f3202085f2142453a903829736fc9bbafc139",
+    "comments_url": "https://api.github.com/repos/markpolyak/lab-grader/commits/b38f3202085f2142453a903829736fc9bbafc139/comments",
+    "author": {
+      "login": "nphl",
+      "id": 15202603,
+      "node_id": "MDQ6VXNlcjE1MjAyNjAz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15202603?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/nphl",
+      "html_url": "https://github.com/nphl",
+      "followers_url": "https://api.github.com/users/nphl/followers",
+      "following_url": "https://api.github.com/users/nphl/following{/other_user}",
+      "gists_url": "https://api.github.com/users/nphl/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/nphl/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/nphl/subscriptions",
+      "organizations_url": "https://api.github.com/users/nphl/orgs",
+      "repos_url": "https://api.github.com/users/nphl/repos",
+      "events_url": "https://api.github.com/users/nphl/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/nphl/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "nphl",
+      "id": 15202603,
+      "node_id": "MDQ6VXNlcjE1MjAyNjAz",
+      "avatar_url": "https://avatars.githubusercontent.com/u/15202603?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/nphl",
+      "html_url": "https://github.com/nphl",
+      "followers_url": "https://api.github.com/users/nphl/followers",
+      "following_url": "https://api.github.com/users/nphl/following{/other_user}",
+      "gists_url": "https://api.github.com/users/nphl/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/nphl/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/nphl/subscriptions",
+      "organizations_url": "https://api.github.com/users/nphl/orgs",
+      "repos_url": "https://api.github.com/users/nphl/repos",
+      "events_url": "https://api.github.com/users/nphl/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/nphl/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "2ac12343a561810c3e4f906ed61850c2036b7f1a",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/2ac12343a561810c3e4f906ed61850c2036b7f1a",
+        "html_url": "https://github.com/markpolyak/lab-grader/commit/2ac12343a561810c3e4f906ed61850c2036b7f1a"
+      }
+    ]
+  },
+  {
+    "sha": "babbd1c7e8b599dec24463e19c28653bb6f8632a",
+    "node_id": "MDY6Q29tbWl0MjY1NzIwMzY5OmJhYmJkMWM3ZThiNTk5ZGVjMjQ0NjNlMTljMjg2NTNiYjZmODYzMmE=",
+    "commit": {
+      "author": {
+        "name": "Mark Polyak",
+        "email": "markpolyak@gmail.com",
+        "date": "2020-05-21T02:08:48Z"
+      },
+      "committer": {
+        "name": "Mark Polyak",
+        "email": "markpolyak@gmail.com",
+        "date": "2020-05-21T02:08:48Z"
+      },
+      "message": "Update .gitignore",
+      "tree": {
+        "sha": "da592d1f06a46641f6474d82f2144a517a840502",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/git/trees/da592d1f06a46641f6474d82f2144a517a840502"
+      },
+      "url": "https://api.github.com/repos/markpolyak/lab-grader/git/commits/babbd1c7e8b599dec24463e19c28653bb6f8632a",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/babbd1c7e8b599dec24463e19c28653bb6f8632a",
+    "html_url": "https://github.com/markpolyak/lab-grader/commit/babbd1c7e8b599dec24463e19c28653bb6f8632a",
+    "comments_url": "https://api.github.com/repos/markpolyak/lab-grader/commits/babbd1c7e8b599dec24463e19c28653bb6f8632a/comments",
+    "author": {
+      "login": "markpolyak",
+      "id": 13708504,
+      "node_id": "MDQ6VXNlcjEzNzA4NTA0",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13708504?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/markpolyak",
+      "html_url": "https://github.com/markpolyak",
+      "followers_url": "https://api.github.com/users/markpolyak/followers",
+      "following_url": "https://api.github.com/users/markpolyak/following{/other_user}",
+      "gists_url": "https://api.github.com/users/markpolyak/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/markpolyak/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/markpolyak/subscriptions",
+      "organizations_url": "https://api.github.com/users/markpolyak/orgs",
+      "repos_url": "https://api.github.com/users/markpolyak/repos",
+      "events_url": "https://api.github.com/users/markpolyak/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/markpolyak/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "markpolyak",
+      "id": 13708504,
+      "node_id": "MDQ6VXNlcjEzNzA4NTA0",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13708504?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/markpolyak",
+      "html_url": "https://github.com/markpolyak",
+      "followers_url": "https://api.github.com/users/markpolyak/followers",
+      "following_url": "https://api.github.com/users/markpolyak/following{/other_user}",
+      "gists_url": "https://api.github.com/users/markpolyak/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/markpolyak/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/markpolyak/subscriptions",
+      "organizations_url": "https://api.github.com/users/markpolyak/orgs",
+      "repos_url": "https://api.github.com/users/markpolyak/repos",
+      "events_url": "https://api.github.com/users/markpolyak/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/markpolyak/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "8325bd5a2fa89174148a3880bacfeda8ef8ee5e9",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/8325bd5a2fa89174148a3880bacfeda8ef8ee5e9",
+        "html_url": "https://github.com/markpolyak/lab-grader/commit/8325bd5a2fa89174148a3880bacfeda8ef8ee5e9"
+      }
+    ]
+  },
+  {
+    "sha": "917ed058aac0c6016830ba9c2b7fccf2c84c0a00",
+    "node_id": "MDY6Q29tbWl0MjY1NzIwMzY5OjkxN2VkMDU4YWFjMGM2MDE2ODMwYmE5YzJiN2ZjY2YyYzg0YzBhMDA=",
+    "commit": {
+      "author": {
+        "name": "Mark Polyak",
+        "email": "markpolyak@gmail.com",
+        "date": "2020-05-21T01:48:59Z"
+      },
+      "committer": {
+        "name": "Mark Polyak",
+        "email": "markpolyak@gmail.com",
+        "date": "2020-05-21T01:48:59Z"
+      },
+      "message": "Working copy",
+      "tree": {
+        "sha": "61f89a57ba44c9e33c5943f882f9d0f6c869665c",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/git/trees/61f89a57ba44c9e33c5943f882f9d0f6c869665c"
+      },
+      "url": "https://api.github.com/repos/markpolyak/lab-grader/git/commits/917ed058aac0c6016830ba9c2b7fccf2c84c0a00",
+      "comment_count": 0,
+      "verification": {
+        "verified": false,
+        "reason": "unsigned",
+        "signature": null,
+        "payload": null
+      }
+    },
+    "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/917ed058aac0c6016830ba9c2b7fccf2c84c0a00",
+    "html_url": "https://github.com/markpolyak/lab-grader/commit/917ed058aac0c6016830ba9c2b7fccf2c84c0a00",
+    "comments_url": "https://api.github.com/repos/markpolyak/lab-grader/commits/917ed058aac0c6016830ba9c2b7fccf2c84c0a00/comments",
+    "author": {
+      "login": "markpolyak",
+      "id": 13708504,
+      "node_id": "MDQ6VXNlcjEzNzA4NTA0",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13708504?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/markpolyak",
+      "html_url": "https://github.com/markpolyak",
+      "followers_url": "https://api.github.com/users/markpolyak/followers",
+      "following_url": "https://api.github.com/users/markpolyak/following{/other_user}",
+      "gists_url": "https://api.github.com/users/markpolyak/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/markpolyak/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/markpolyak/subscriptions",
+      "organizations_url": "https://api.github.com/users/markpolyak/orgs",
+      "repos_url": "https://api.github.com/users/markpolyak/repos",
+      "events_url": "https://api.github.com/users/markpolyak/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/markpolyak/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "committer": {
+      "login": "markpolyak",
+      "id": 13708504,
+      "node_id": "MDQ6VXNlcjEzNzA4NTA0",
+      "avatar_url": "https://avatars.githubusercontent.com/u/13708504?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/markpolyak",
+      "html_url": "https://github.com/markpolyak",
+      "followers_url": "https://api.github.com/users/markpolyak/followers",
+      "following_url": "https://api.github.com/users/markpolyak/following{/other_user}",
+      "gists_url": "https://api.github.com/users/markpolyak/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/markpolyak/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/markpolyak/subscriptions",
+      "organizations_url": "https://api.github.com/users/markpolyak/orgs",
+      "repos_url": "https://api.github.com/users/markpolyak/repos",
+      "events_url": "https://api.github.com/users/markpolyak/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/markpolyak/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "parents": [
+      {
+        "sha": "e968b6ccaa5d6932455b20743951e81bbd5cd5bd",
+        "url": "https://api.github.com/repos/markpolyak/lab-grader/commits/e968b6ccaa5d6932455b20743951e81bbd5cd5bd",
+        "html_url": "https://github.com/markpolyak/lab-grader/commit/e968b6ccaa5d6932455b20743951e81bbd5cd5bd"
+      }
+    ]
+  }
+]
