@@ -8,7 +8,7 @@ class TestCheckEditors(unittest.TestCase):
 # Проверка работы парсера 
 
 	def test_github_data_parser(self):
-		with open('data.json', 'r') as reader:
+		with open('tests/data.json', 'r') as reader:
 			json = reader.read()
 			result = check_editors.github_data_parser(json)
 			self.assertTrue("nphl" in result) 			# Проверка наличия ожидаемых login-ов
