@@ -58,7 +58,7 @@ def get_imap_connection(config):
             config['auth']['email']['password']
         )
     except imaplib.IMAP4.error:
-        logger.critical("Login failed!!!")
+        logger.exception("Login failed!!!")
         # print("LOGIN FAILED!!!")
         sys.exit(1)
     # print(rv, data)

@@ -11,10 +11,10 @@ from google.auth.transport.requests import Request
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 class GoogleSheet:
-    spreadsheet = None
-    sheets = None
-    data = None
-    data_update = None
+    # spreadsheet = None
+    # sheets = None
+    # data = None
+    # data_update = None
     # some predefined constants that describe data structure
     DEFAULT_STUDENT_NAME_COLUMN = 1
     DEFAULT_LAB_COLUMN_OFFSET = 1

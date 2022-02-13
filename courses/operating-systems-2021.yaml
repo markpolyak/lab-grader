@@ -83,7 +83,7 @@ course:
                 - lab3.cpp
             moss:
                 language: cc
-                max-matches: 100
+                max-matches: 1000
                 basefiles:
                     - 
                         repo: k43guap/os-course-task3
@@ -110,6 +110,12 @@ course:
             taskid-max: 30
             penalty-max: 8
             ignore-completion-date: True
+            files:
+                - client.cpp
+                - server.cpp
+            moss:
+                language: cc
+                max-matches: 1000
         "6":
             github-prefix: os-task5
             short-name: ЛР6
