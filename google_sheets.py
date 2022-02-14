@@ -116,7 +116,7 @@ class GoogleSheet:
         )
         response = request.execute()
         for i in range(0, len(response.get('valueRanges'))):
-            data[self.sheets[i]] = response.get('valueRanges')[i].get('values')
+            data[self.sheets[i]] = response.get('valueRanges')[i].get('values', [])
         return data
 
     def find_column_by_name(self, col_name, sheet, dimension='COLUMNS'):
