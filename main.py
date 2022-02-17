@@ -250,8 +250,6 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                 continue
 
         # check if tests have passed successfully
-        # TODO: we should iterate over all ci services found in the config, but for now only the first ci service is processed
-        # ci_service = course_config['labs'][lab_id].get('ci', [''])[0]
         for ci_service in course_config['labs'][lab_id].get('ci', ['']):
             logger.debug("Performing check for '%s' data in %s", ci_service, repo)
             completion_date = None
@@ -266,11 +264,18 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                 if completion_date:
                     log = common.get_travis_log(repo, ["Travis CI"])
             elif ci_service == 'workflows':
+                try:
+                    ci_jobs = course_config['labs'][lab_id]['ci'].get(ci_service)
+                except (AttributeError, TypeError): 
+                    # AttributeError in case there is no .get method and TypeError in case get is not callable
+                    ci_jobs = ["Autograding", "test", "build"]
+                    logger.debug("No GitHub Actions jobs specified. Fall back to default %s", ci_jobs)
+                # ci_jobs = course_config['labs'][lab_id]['ci'][ci_service]
                 completion_date = common.get_successfull_build_info(
-                    repo, ["Autograding", "test", "build"], all_successfull=True
+                    repo, ci_jobs, all_successfull=True
                 ).get("completed_at")
                 if completion_date:
-                    log = common.get_github_workflows_log(repo, ["Autograding", "test", "build"])
+                    log = common.get_github_workflows_log(repo, ci_jobs)
             # TODO: add support for not using any CI/CD service at all, e.g.:
             elif ci_service == '':
                 # do something
@@ -293,6 +298,12 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                     # print(log)
                 else:
                     # everything looks good, go on and update lab status
+                    # get grading points (if any) from the logs
+                    grading_points = common.get_grading_points(log)
+                    if grading_points is not None:
+                        grade_points_suffix = f"@{grading_points}"
+                    else:
+                        grade_points_suffix = ""
                     # calculate grade reduction coefficient
                     reduction_coefficient_str = common.get_grade_reduction_coefficient(log)
                     if reduction_coefficient_str is not None:
@@ -313,7 +324,7 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                         # print(f"{student_dt}, {deadlines[student['group']]}")
                         # print(f"{overdue}, {penalty}")
                     # update status
-                    lab_status = "v{}{}".format(grade_reduction_suffix, penalty_suffix)
+                    lab_status = "v{}{}{}".format(grade_points_suffix, grade_reduction_suffix, penalty_suffix)
                     logger.debug("New status for lab '%s' by student '%s' is '%s' from CI service '%s'", lab_id, student, lab_status, ci_service)
                     spreadsheet.set_student_lab_status(
                         student, lab_id_column, lab_status,

@@ -658,6 +658,37 @@ def get_grade_reduction_coefficient(log):
         return '{0:g}'.format(0.01 * (100 - reduction_percent))
 
 
+def get_string_pos_helper(log, search_str):
+    i = log.find(search_str)
+    # skip all occurences that start with a quote, 
+    # e.g. from source code like `echo "Grading reduced by ..."`,
+    # which is echoed to the log before being executed
+    while i > 0 and (log[i-1] == '"' or log[i-1] == "'"):
+        i = log.find(search_str, i+1)
+    if i < 0:
+        return None
+    return i + len(search_str) + 1
+
+
+def get_grading_points(log):
+    """
+    get grading points (score) if provided in the build log
+
+    :param log: build log
+    :return: grade reduction coefficient as str or None
+    """
+    # TODO: this function should take a regex argument to search for a specific phrase in the logs
+    points = None
+    i = get_string_pos_helper(log, "Score is")
+    if i is not None:
+        points = float(log[i:log.find("\n", i)].strip())
+    else:
+        i = get_string_pos_helper(log, "Points")
+        if i is not None:
+            points = float(log[i:log.find("/", i)].strip())
+    return points
+
+
 #
 def get_repo_issues_grade_coefficient(repo: str, lab_id: str):
     """

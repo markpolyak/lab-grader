@@ -33,7 +33,7 @@ course:
                 - workflows
             files:
                 - goals.md
-                - info.md
+                - ex2.md
             moss:
                 language: c
         "2":
@@ -41,9 +41,10 @@ course:
             short-name: HW2
             taskid-max: 25
             penalty-max: 6
-            # ignore-task-id: True
+            ignore-task-id: True
             ci:
-                - workflows
+                workflows:
+                    - "Test python scripts"
             files:
                 - jupyter_assignment.ipynb
                 - matplotlib_assignment.ipynb
