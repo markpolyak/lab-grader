@@ -173,10 +173,11 @@ def update_students(
     return spreadsheet.data_update
 
 
-def create_appveyor_projects(dry_run):
+def create_appveyor_projects(dry_run, course_config={}):
     """
     """
-    task3_repos = common.get_github_repo_names(settings.github_organization, prefix='os-task3', private=False)
+    # task3_repos = common.get_github_repo_names(settings.github_organization, prefix='os-task3', private=False)
+    task3_repos = common.get_github_repo_names(course_config.github.organization, prefix='os-task3', private=False)
     # print(task3_repos)
     # zz = common.get_appveyor_project_repo_names()
     new_projects = common.add_appveyor_projects_safely(list(task3_repos), trigger_build=True, dry_run=dry_run)
@@ -286,11 +287,17 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
             # check if tests were completed successfully and tests should not be ignored
             if completion_date and not course_config['labs'][lab_id].get('ignore-completion-date', False):
                 # calculate correct TASKID
-                student_task_id = int(spreadsheet.get_student_task_id(student))
-                student_task_id += course_config['labs'][lab_id].get('taskid-shift', 0)
-                student_task_id = student_task_id % course_config['labs'][lab_id]['taskid-max']
-                if student_task_id == 0:
-                    student_task_id = course_config['labs'][lab_id]['taskid-max']
+                if (not course_config['labs'][lab_id].get('ignore-task-id', False) 
+                    and course_config['google'].get('task-id-column') is not None
+                ):
+                    student_task_id = int(spreadsheet.get_student_task_id(student))
+                    student_task_id += course_config['labs'][lab_id].get('taskid-shift', 0)
+                    student_task_id = student_task_id % course_config['labs'][lab_id]['taskid-max']
+                    if student_task_id == 0:
+                        student_task_id = course_config['labs'][lab_id]['taskid-max']
+                else:
+                    student_task_id = -1
+                    logger.debug("TASKID check is skipped")
                 # check TASKID from logs
                 if common.get_task_id(log) != student_task_id and not course_config['labs'][lab_id].get('ignore-task-id', False):
                     spreadsheet.set_student_lab_status(student, lab_id_column, "?! Wrong TASKID!")
@@ -347,7 +354,7 @@ def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
     # initialize MOSS
     moss_settings = course_config['labs'][lab_id].get('moss', {})
     moss = mosspy.Moss(
-        settings.moss_userid,
+        moss_user_id,
         moss_settings.get('language')
     )
     if moss_settings.get('max-matches'):
@@ -542,7 +549,7 @@ def main():
         if ("all" in params.update_action 
             or "appveyor" in params.update_action
         ):
-            new_projects = create_appveyor_projects(params.dry_run)
+            new_projects = create_appveyor_projects(params.dry_run, config['course'])
             projects_count = len(new_projects)
             if params.dry_run:
                 projects_msg_part = "" if projects_count == 1 else "s"
