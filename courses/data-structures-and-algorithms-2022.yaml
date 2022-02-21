@@ -1,0 +1,85 @@
+---
+# Configuration file for lab-grader
+
+course:
+    name: Data structures and algorithms
+    alt-names: 
+        - DSA
+        - Структуры и алгоритмы обраотки данных
+        - САОД
+    semester: Spring 2022
+    email: k43guap@ya.ru
+    timezone: MSK
+    github:
+        organization: suai-saod-2022
+        teachers:
+            - "Mark Polyak"
+            - markpolyak
+    google:
+        spreadsheet: 1jtOSgZ9FWwd8HO8XrukdNImJEW9jWSUBO-skwdBVR1c
+        info-sheet: График
+        task-id-column: 2
+        student-name-column: 3
+        lab-column-offset: 4
+    labs:
+        "1":
+            github-prefix: cp
+            short-name: "Этап 1"
+            # taskid-max: 7
+            penalty-max: 10
+            ignore-task-id: True
+            ci:
+                - workflows
+            files:
+            moss:
+        "2":
+            github-prefix: cp
+            short-name: "Этап 2"
+            # taskid-max: 4
+            penalty-max: 12
+            ci:
+                workflows:
+                  - "Test step 2"
+            files:
+            moss:
+        "3":
+            github-prefix: cp
+            short-name: "Этап 3"
+            # taskid-max: 20
+            penalty-max: 12
+            ci:
+                - workflows
+            files:
+            moss:
+        "4":
+            github-prefix: cp
+            short-name: "Этап 4"
+            # taskid-max: 20
+            penalty-max: 12
+            ci:
+                - workflows
+            files:
+            moss:
+        "5":
+            github-prefix: cp
+            short-name: "Этап 5"
+            # taskid-max: 30
+            penalty-max: 14
+            ci:
+                - workflows
+            files:
+            moss:
+        "6":
+            github-prefix: cp
+            short-name: "Этап 3"
+            # taskid-max: 30
+            penalty-max: 40
+            # ignore-completion-date: True
+            ci:
+                - workflows
+            files:
+            moss:
+misc:
+    requests-timeout: 5
+    
+    
