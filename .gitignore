@@ -3,11 +3,19 @@
 
 # credentials and sensitive information
 settings.py
+auth.yaml
 credentials.json
-token.pickle
+lab-grader-7c555a96deb9.json
+*token.pickle
 
 # moss data
 moss/
+lab1/
+lab2/
+lab3/
+lab4/
+lab5/
+tmp/
 
 # the rest goes from GitHub .gitignore file for Python projects
 # https://github.com/github/gitignore/blob/master/Python.gitignore
