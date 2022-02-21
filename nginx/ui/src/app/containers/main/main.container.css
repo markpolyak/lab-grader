@@ -1,0 +1,35 @@
+.active {
+  background: rgba(103, 58, 183, 0.20);
+  color: #673ab7;
+}
+
+.header {
+  position: absolute;
+  width: 100%;
+}
+
+.navigation {
+  position: absolute;
+  width: 200px;
+  height: 100%;
+  z-index: 10000;
+  padding-top: 72px;
+  box-sizing: border-box;
+}
+
+.outlet {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 96px 32px 32px 232px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.main {
+  height: 100vh;
+}
+
+

@@ -3,12 +3,13 @@ import logging
 import pickle
 import os.path
 from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 
 # If modifying these scopes, delete the file token.pickle.
 # We need write access to the spreadsheet: https://developers.google.com/sheets/api/guides/authorizing
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+
 
 class GoogleSheet:
     spreadsheet = None
@@ -26,11 +27,12 @@ class GoogleSheet:
         :param config: a course config
         """
         # read config params
-        self.credentials_file = config['auth']['google']['credentials-file']
-        self.spreadsheet_id = config['course']['google']['spreadsheet']
-        self.task_id_column = config['course']['google'].get('task-id-column', self.DEFAULT_TASK_ID_COLUMN)
-        self.student_name_column = config['course']['google'].get('student-name-column', self.DEFAULT_STUDENT_NAME_COLUMN)
-        self.lab_column_offset = config['course']['google'].get('lab-column-offset', self.DEFAULT_LAB_COLUMN_OFFSET)
+        self.credentials_file = config['auth']['google']['credentials']
+        self.spreadsheet_id = config['google']['spreadsheet']
+        self.task_id_column = config['google'].get('task-id-column', self.DEFAULT_TASK_ID_COLUMN)
+        self.student_name_column = config['google'].get('student-name-column',
+                                                                  self.DEFAULT_STUDENT_NAME_COLUMN)
+        self.lab_column_offset = config['google'].get('lab-column-offset', self.DEFAULT_LAB_COLUMN_OFFSET)
         # create a new API instance to work with the spreadsheet
         self.spreadsheet = self.__get_spreadsheet_instance()
         # load sheet names
@@ -54,7 +56,6 @@ class GoogleSheet:
             string = chr(65 + remainder) + string
         return string
 
-
     def __get_spreadsheet_instance(self):
         """
         Performs authentication and creates a service.spreadsheets() instance
@@ -73,9 +74,7 @@ class GoogleSheet:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    self.credentials_file, SCOPES)
-                creds = flow.run_local_server(port=0)
+                creds = service_account.Credentials.from_service_account_file(self.credentials_file, scopes=SCOPES)
             # Save the credentials for the next run
             with open('token.pickle', 'wb') as token:
                 pickle.dump(creds, token)
@@ -85,7 +84,6 @@ class GoogleSheet:
         # Call the Sheets API
         spreadsheet = service.spreadsheets()
         return spreadsheet
-
 
     def __get_sheet_names(self):
         """
@@ -101,7 +99,6 @@ class GoogleSheet:
             sheets.append(s.get('properties', {}).get('title'))
         return sheets
 
-
     def __get_multiple_sheets_data(self, dimension='COLUMNS'):
         """
         Get data from multiple sheets at once with a batchGet request
@@ -111,7 +108,7 @@ class GoogleSheet:
         """
         data = {}
         request = self.spreadsheet.values().batchGet(
-            spreadsheetId=self.spreadsheet_id, 
+            spreadsheetId=self.spreadsheet_id,
             ranges=self.sheets, majorDimension=dimension
         )
         response = request.execute()
@@ -133,8 +130,8 @@ class GoogleSheet:
             if col_name in self.data[sheet][i]:
                 _column_number = i
                 break
-        #print(col_name)
-        #print(self.data[sheet][3])
+        # print(col_name)
+        # print(self.data[sheet][3])
         return _column_number
         return _column_number
 
@@ -149,9 +146,10 @@ class GoogleSheet:
         """
         github_column = self.find_column_by_name('GitHub', student['group'])
         if github_column is None:
-            raise ValueError("Internal error! GitHub account column not found on sheet {}. Please, verify spreadsheet integrity!".format(student['group']))
+            raise ValueError(
+                "Internal error! GitHub account column not found on sheet {}. Please, verify spreadsheet integrity!".format(
+                    student['group']))
         return github_column
-
 
     def find_student(self, student, dimension='COLUMNS', searchby='name'):
         """
@@ -171,12 +169,16 @@ class GoogleSheet:
         if dimension != 'COLUMNS':
             raise ValueError("Not implemented! Only 'COLUMNS' dimension value is supported at the moment.")
         if student['group'] not in self.data:
-            raise ValueError("Group '{}' not found in spreadsheet! Available groups are: {}. Check your spelling or contact course staff if you don't see your group listed.".format(student['group'], list(self.data.keys())))
+            raise ValueError(
+                "Group '{}' not found in spreadsheet! Available groups are: {}. Check your spelling or contact course staff if you don't see your group listed.".format(
+                    student['group'], list(self.data.keys())))
         if 'name' in student and searchby == 'name':
             try:
                 position = self.data[student['group']][self.student_name_column].index(student['name'])
             except ValueError:
-                raise ValueError("Student '{}' not found in group {}! Check spelling or contact course staff if you are not on the group list.".format(student['name'], student['group']))
+                raise ValueError(
+                    "Student '{}' not found in group {}! Check spelling or contact course staff if you are not on the group list.".format(
+                        student['name'], student['group']))
         elif 'github' in student:
             github_column = self._find_github_column(student)
             try:
@@ -184,11 +186,14 @@ class GoogleSheet:
                 position = github_names.index(student['github'].lower())
                 # position = data[student['group']][github_column].index(student['github'])
             except ValueError:
-                raise ValueError("Student with GitHub account {} not found in group {}! Check spelling or contact course staff if you are not on the group list.".format(student['github'], student['group']))
+                raise ValueError(
+                    "Student with GitHub account {} not found in group {}! Check spelling or contact course staff if you are not on the group list.".format(
+                        student['github'], student['group']))
         else:
-            raise ValueError("Internal error! Both name and github account info are missing from student description: {}".format(student))
+            raise ValueError(
+                "Internal error! Both name and github account info are missing from student description: {}".format(
+                    student))
         return position
-
 
     def find_student_by_github(self, github, dimension='COLUMNS'):
         """
@@ -216,7 +221,6 @@ class GoogleSheet:
                 return student
         raise ValueError("Student with GitHub account {} not found in any of the groups!".format(github))
 
-
     def get_student_task_id(self, student, dimension='COLUMNS'):
         """
         Find stident's task id from google spreadsheet
@@ -231,7 +235,6 @@ class GoogleSheet:
         student_position = self.find_student(student, dimension=dimension)
         task_id = self.data[student['group']][self.task_id_column][student_position]
         return task_id
-
 
     def get_student_github(self, student, dimension='COLUMNS'):
         """
@@ -254,7 +257,6 @@ class GoogleSheet:
         except IndexError:
             student_github = None
         return student_github
-
 
     def get_student_lab_status(self, student, lab_id, dimension='COLUMNS'):
         """
@@ -283,7 +285,6 @@ class GoogleSheet:
             student_lab_status = None
         return student_lab_status
 
-
     def get_lab_deadline(self, group, lab_id, dimension='COLUMNS'):
         """
         Get deadline for a lab 
@@ -305,7 +306,6 @@ class GoogleSheet:
         except (IndexError, TypeError):
             lab_deadline = None
         return lab_deadline
-
 
     def set_student_github(self, student, dimension='COLUMNS'):
         """
@@ -336,11 +336,16 @@ class GoogleSheet:
         else:
             # 1. does any other student already use that github account?
             if other_student['group'] != student['group'] or other_student['name'] != student['name']:
-                raise ValueError("Can't set GitHub account for student '{}' from group '{}' to '{}'. This GitHub account is already used by student '{}' from group '{}'. Are you trying to cheat here?".format(student['name'], student['group'], other_student['github'], other_student['name'], other_student['group']))
+                raise ValueError(
+                    "Can't set GitHub account for student '{}' from group '{}' to '{}'. This GitHub account is already used by student '{}' from group '{}'. Are you trying to cheat here?".format(
+                        student['name'], student['group'], other_student['github'], other_student['name'],
+                        other_student['group']))
             # 2. does this student already have a github account?
-            elif other_student['github'] != student['github']: 
+            elif other_student['github'] != student['github']:
                 # here we assume that other_student and student are the same person
-                raise ValueError("GitHub account for student '{}' from group '{}' is '{}'. Can't set it to '{}'. Contact course staff if you want to update it.".format(student['name'], student['group'], other_student['github'], student['github']))
+                raise ValueError(
+                    "GitHub account for student '{}' from group '{}' is '{}'. Can't set it to '{}'. Contact course staff if you want to update it.".format(
+                        student['name'], student['group'], other_student['github'], student['github']))
             # 3. If not 1 & 2, then it must be a duplicate, so ignore it
             else:
                 is_new_student = False
@@ -352,18 +357,20 @@ class GoogleSheet:
             values_count = len(self.data[student['group']][github_column])
             if values_count < student_position + 1:
                 self.data[student['group']][github_column] = [
-                    self.data[student['group']][github_column][i] if i < values_count else "" for i in range(0, student_position+1)
+                    self.data[student['group']][github_column][i] if i < values_count else "" for i in
+                    range(0, student_position + 1)
                 ]
             self.data[student['group']][github_column][student_position] = student['github']
             self.data_update.append({
-                'range': "{}!{}{}".format(student['group'], self.colnum_string(github_column, True), student_position+1),
+                'range': "{}!{}{}".format(student['group'], self.colnum_string(github_column, True),
+                                          student_position + 1),
                 # 'majorDimension': dimension,
                 'values': [[student['github']]]
             })
             # print("Pending write operation: {} @ {}".format(self.data_update[-1]['values'], self.data_update[-1]['range']))
-            logging.getLogger(__name__).info("Pending write operation: %s @ %s", self.data_update[-1]['values'], self.data_update[-1]['range'])
+            logging.getLogger(__name__).info("Pending write operation: %s @ %s", self.data_update[-1]['values'],
+                                             self.data_update[-1]['range'])
         return self.data_update
-
 
     def set_student_lab_status(self, student, lab_id, value, dimension='COLUMNS'):
         """
@@ -392,21 +399,23 @@ class GoogleSheet:
         values_count = len(self.data[student['group']][lab_column])
         if values_count < student_position + 1:
             self.data[student['group']][lab_column] = [
-                self.data[student['group']][lab_column][i] if i < values_count else "" for i in range(0, student_position+1)
+                self.data[student['group']][lab_column][i] if i < values_count else "" for i in
+                range(0, student_position + 1)
             ]
         # print(student)
         # print(lab_column, student_position, values_count, len(data[student['group']][lab_column]))
         # print(data[student['group']][lab_column])
         self.data[student['group']][lab_column][student_position] = value
         self.data_update.append({
-            'range': "{}!{}{}".format(student['group'], self.colnum_string(lab_column, True), student_position+1),
+            'range': "{}!{}{}".format(student['group'], self.colnum_string(lab_column, True), student_position + 1),
             # 'majorDimension': dimension,
             'values': [[value]]
         })
         # print("Pending write operation: {} @ {}".format(data_update[-1]['values'], data_update[-1]['range']))
-        logging.getLogger(__name__).info("Pending write operation: %s @ %s", self.data_update[-1]['values'], self.data_update[-1]['range'])
+        logging.getLogger(__name__).info(
+            "Pending write operation: %s @ %s", self.data_update[-1]['values'], self.data_update[-1]['range']
+        )
         return self.data_update
-
 
     def batch_update(self):
         """
@@ -436,7 +445,7 @@ def main():
     # data = get_multiple_sheets_data(spreadsheet, sheets)
     logging.basicConfig(
         level=logging.DEBUG,
-        format= '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
+        format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
         datefmt='%H:%M:%S'
     )
     import sys
@@ -445,7 +454,7 @@ def main():
         exit()
     config = {
         'course': {'google': {'spreadsheet': sys.argv[1]}},
-        'auth':   {'google': {'credentials-file': sys.argv[2]}}
+        'auth': {'google': {'credentials-file': sys.argv[2]}}
     }
     spreadsheet = GoogleSheet(config)
     print(f"Sheet names are: {spreadsheet.sheets}")

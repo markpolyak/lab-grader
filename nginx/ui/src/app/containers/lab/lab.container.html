@@ -1,0 +1,53 @@
+<div class="task-page">
+  <div class="form">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>New labs task</mat-card-title>
+      </mat-card-header>
+      <mat-card-content [formGroup]="formGroup">
+        <p>
+          <mat-form-field class="field">
+            <mat-label>Config</mat-label>
+            <mat-select formControlName="config">
+               <mat-option *ngFor="let conf of configs$ | async" [value]="conf">
+                {{conf}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </p>
+        <p>
+          <mat-form-field class="field">
+            <mat-label>Tasks for executes</mat-label>
+            <input matInput formControlName="labs_count" placeholder="Tasks for executes">
+          </mat-form-field>
+        </p>
+        <p>
+          <mat-checkbox [disabled]="!!(currentTask$ | async)" class="checkbox" (click)="allTaskClickHandler()">All task</mat-checkbox>
+          <mat-checkbox class="checkbox" formControlName="dry_run">Dry run</mat-checkbox>
+          <mat-checkbox class="checkbox" formControlName="logs_vv">Log VV</mat-checkbox>
+        </p>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button
+          mat-button
+          [disabled]="this.formGroup.invalid || !!(currentTask$ | async)"
+          (click)="startHandler()"
+        >
+          Start
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+  <div class="divider"></div>
+  <div class="log">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Live log viewer</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <log-viewer [file]="currentTask$ | async"></log-viewer>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
+

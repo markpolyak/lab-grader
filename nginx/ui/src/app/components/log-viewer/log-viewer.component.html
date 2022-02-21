@@ -1,0 +1,11 @@
+<div class="log-viewer">
+  <h2 class="center" *ngIf="!(file$ | async) else showLog">
+    Log not selected
+  </h2>
+</div>
+
+<ng-template #showLog>
+  <pre *ngIf="!(loading$ | async)" class="log">{{log$ | async}}</pre>
+  <div class="error" *ngIf="(showError$ | async) && !(loading$ | async)"> {{error$ | async}}</div>
+  <mat-spinner class="center" *ngIf="(loading$ | async)"></mat-spinner>
+</ng-template>

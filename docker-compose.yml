@@ -1,0 +1,40 @@
+version: '3.8'
+
+networks:
+  grader-net:
+
+services:
+  nginx:
+    image: nginx:dev
+    build:
+      context: nginx
+      dockerfile: Dockerfile
+    volumes:
+      - type: bind
+        source: ./nginx
+        target: /etc/nginx/
+    ports:
+      - target: 80
+        published: 80
+    networks:
+      - grader-net
+
+  lab-grader-backend:
+    image: lab-grader:dev
+    build:
+      context: .
+      dockerfile: build-context/Dockerfile
+    environment:
+      GRADER_AUTH_CONFIG: /opt/grader/configs/app/auth.yaml
+      GRADER_LOGGER_CONFIG: /opt/grader/configs/app/logging.yaml
+      GRADER_COURSE_CONFIGS_PATH: /opt/grader/configs/courses
+      GRADER_LOG_PATH: /opt/grader/logs
+    volumes:
+      - type: bind
+        source: ./static
+        target: /opt/grader/configs
+      - type: bind
+        source: ./logs
+        target: /opt/grader/logs
+    networks:
+      - grader-net
