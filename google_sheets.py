@@ -5,6 +5,7 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 
 # If modifying these scopes, delete the file token.pickle.
 # We need write access to the spreadsheet: https://developers.google.com/sheets/api/guides/authorizing
@@ -26,7 +27,10 @@ class GoogleSheet:
         :param config: a course config
         """
         # read config params
-        self.credentials_file = config['auth']['google']['credentials-file']
+        self.credentials_file = config['auth']['google'].get('credentials-file')
+        self.service_account_file = config['auth']['google'].get('service-account-file')
+        if self.credentials_file is None and self.service_account_file is None:
+            raise ValueError("Either google user client secret file or a google service account secret file should be provided! Set a value to at least one of the following settings paths: ['auth/google/credentials-file', 'auth/google/service-account-file'].")
         self.spreadsheet_id = config['course']['google']['spreadsheet']
         self.task_id_column = config['course']['google'].get('task-id-column', self.DEFAULT_TASK_ID_COLUMN)
         self.student_name_column = config['course']['google'].get('student-name-column', self.DEFAULT_STUDENT_NAME_COLUMN)
@@ -62,23 +66,28 @@ class GoogleSheet:
         :returns: service.spreadsheets() instance
         """
         creds = None
-        # The file token.pickle stores the user's access and refresh tokens, and is
-        # created automatically when the authorization flow completes for the first
-        # time.
-        if os.path.exists('token.pickle'):
-            with open('token.pickle', 'rb') as token:
-                creds = pickle.load(token)
-        # If there are no (valid) credentials available, let the user log in.
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    self.credentials_file, SCOPES)
-                creds = flow.run_local_server(port=0)
-            # Save the credentials for the next run
-            with open('token.pickle', 'wb') as token:
-                pickle.dump(creds, token)
+        if self.service_account_file:
+            logging.getLogger(__name__).debug("Using google service account to authenticate")
+            creds = service_account.Credentials.from_service_account_file(self.service_account_file, scopes=SCOPES)
+        if not creds:
+            logging.getLogger(__name__).debug("Using a personal google user account to authenticate")
+            # The file token.pickle stores the user's access and refresh tokens, and is
+            # created automatically when the authorization flow completes for the first
+            # time.
+            if os.path.exists('token.pickle'):
+                with open('token.pickle', 'rb') as token:
+                    creds = pickle.load(token)
+            # If there are no (valid) credentials available, let the user log in.
+            if not creds or not creds.valid:
+                if creds and creds.expired and creds.refresh_token:
+                    creds.refresh(Request())
+                else:
+                    flow = InstalledAppFlow.from_client_secrets_file(
+                        self.credentials_file, SCOPES)
+                    creds = flow.run_local_server(port=0)
+                # Save the credentials for the next run
+                with open('token.pickle', 'wb') as token:
+                    pickle.dump(creds, token)
 
         service = build('sheets', 'v4', credentials=creds, cache_discovery=False)
 
