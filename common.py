@@ -382,8 +382,16 @@ def get_github_issue_referenced_events(repo: str, issue_number: str):
     return [event for event in events if event['event'] == "referenced"]
 
 
-#
+# 
 def get_successfull_build_info(repo, check_run_names, all_successfull=False):
+    """
+    get a most recent sccessfull build info from the specified list of checkruns
+    
+    :param repo: repository name (with organization/owner prefix)
+    :param check_run_names: list of check run names to be processed
+    :param all_successfull: if `True`, all check runs from the `check_run_names` list must pass successfully
+    :return: a most recent checkrun from the `check_run_names` list or empty dict if `all_successfull` is `False` and at least one of check runs from the `check_run_names` has failed
+    """
     check_runs = get_github_check_runs(repo)
     latest_check_run = {}
     for check_run in check_runs:
