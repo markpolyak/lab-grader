@@ -802,6 +802,12 @@ def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
     else:
         msg_part = None
 
+    # get count commits from shell
+    if "is_shell_commits" in settings.os_labs[lab_id]['repo_requirements']['commit']:
+        is_shell_commits = settings.os_labs[lab_id]['repo_requirements']['commit']['is_shell_commits']
+    else:
+        is_shell_commits = None
+
     # get issues min quantity from settings
     if "min_quantity" in settings.os_labs[lab_id]['repo_requirements']['commit']:
         min_quantity = settings.os_labs[lab_id]['repo_requirements']['commit']['min_quantity']
@@ -828,7 +834,13 @@ def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
     if msg_part is not None:
         commits_with_prefix = [commit for commit in student_commits if msg_part in commit['commit']['message']]
         commits_number: int = len(commits_with_prefix)
-    else:
+
+    # check that the commit was made from shell (command line interface)
+    if is_shell_commits is not None:
+        commits_form_shell = [commit for commit in student_commits if "GitHub" != commit['commit']['committer']['name']]
+        commits_number: int = len(commits_form_shell)
+
+    if commits_number is None:
         commits_number: int = len(student_commits)
 
     if commits_number >= int(min_quantity):

@@ -35,6 +35,13 @@ os_labs = {
         'taskid_max': 20,
         'taskid_shift': 0,
         'github_prefix': 'os-task1',
+        'repo_requirements': {
+            'commit': {
+                'is_shell_commits': True,
+                'min_quantity': 1,
+                'grade_percent': 20
+            }
+        }
         'penalty_max': 6,
         'files': ['lab1.sh'],
         'moss': {'language': 'c', 'max-matches': 1000, 'basefiles': [{'repo': 'k43guap/os-course-task1', 'filename': 'lab1.sh'}]}, #{'language': 'ascii', 'max-matches': 10, 'directory': 0, 'basefiles': []},
