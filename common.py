@@ -828,7 +828,7 @@ def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
     if msg_part is not None:
         commits_with_prefix = [commit for commit in student_commits if msg_part in commit['commit']['message']]
         commits_number: int = len(commits_with_prefix)
-    else: 
+    else:
         commits_number: int = len(student_commits)
 
     if commits_number >= int(min_quantity):
