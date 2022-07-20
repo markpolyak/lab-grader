@@ -36,6 +36,11 @@ course:
                 - report.pdf
             moss:
                 language: c
+            repo_requirements:
+                commit:
+                    min_quantity: 3
+                    min_quantity_shell: 1
+                    grade_percent: 20
         "1.1":
             github-prefix: os-task1-1
             short-name: ЛР1.1

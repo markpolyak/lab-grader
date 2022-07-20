@@ -802,11 +802,17 @@ def get_repo_commit_grade_coefficient(repo: str, lab_id: str, course_config={}):
     else:
         msg_part = None
 
-    # get issues min quantity from settings
+    # get commit min quantity from settings
     if "min_quantity" in course_config['labs'][lab_id]['repo_requirements']['commit']:
         min_quantity = course_config['labs'][lab_id]['repo_requirements']['commit']['min_quantity']
     else:
         min_quantity = None
+
+    # get commit min quantity from shell
+    if "min_quantity_shell" in course_config['labs'][lab_id]['repo_requirements']['commit']:
+        min_quantity_shell = course_config['labs'][lab_id]['repo_requirements']['commit']['min_quantity_shell']
+    else:
+        min_quantity_shell = None
 
     # get grade percent
     if "grade_percent" in course_config['labs'][lab_id]['repo_requirements']['commit']:
@@ -824,6 +830,12 @@ def get_repo_commit_grade_coefficient(repo: str, lab_id: str, course_config={}):
     # get commits and removing authored by teacher
     student_commits = [commit for commit in repo_commits
                        if commit['author']['login'] not in course_config['github']['teachers']]
+
+    if min_quantity_shell is not None:
+        student_shell_commits = [commit for commit in student_commits
+                       if commit['committer']['login'] != "web-flow"]
+        if len(student_shell_commits) <= min_quantity_shell:
+            return 0.0
 
     if msg_part is not None:
         commits_with_prefix = [commit for commit in student_commits if msg_part in commit['commit']['message']]
