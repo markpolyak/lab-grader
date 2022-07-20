@@ -784,7 +784,7 @@ def get_repo_issues_grade_coefficient(repo: str, lab_id: str):
 
 
 #
-def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
+def get_repo_commit_grade_coefficient(repo: str, lab_id: str, course_config={}):
     """
     get grade coefficient for provided repository and lab id by checking repository commits requirements
 
@@ -793,24 +793,24 @@ def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
     :return: None or float coefficient (which can be 0.0)
     """
 
-    if "commit" not in settings.os_labs[lab_id]['repo_requirements']:
+    if "commit" not in course_config['labs'][lab_id]['repo_requirements']:
         return None
 
     # get commit message part
-    if "msg_part" in settings.os_labs[lab_id]['repo_requirements']['commit']:
-        msg_part = settings.os_labs[lab_id]['repo_requirements']['commit']['msg_part']
+    if "msg_part" in course_config['labs'][lab_id]['repo_requirements']['commit']:
+        msg_part = course_config['labs'][lab_id]['repo_requirements']['commit']['msg_part']
     else:
         msg_part = None
 
     # get issues min quantity from settings
-    if "min_quantity" in settings.os_labs[lab_id]['repo_requirements']['commit']:
-        min_quantity = settings.os_labs[lab_id]['repo_requirements']['commit']['min_quantity']
+    if "min_quantity" in course_config['labs'][lab_id]['repo_requirements']['commit']:
+        min_quantity = course_config['labs'][lab_id]['repo_requirements']['commit']['min_quantity']
     else:
         min_quantity = None
 
     # get grade percent
-    if "grade_percent" in settings.os_labs[lab_id]['repo_requirements']['commit']:
-        grade_percent = settings.os_labs[lab_id]['repo_requirements']['commit']['grade_percent']
+    if "grade_percent" in course_config['labs'][lab_id]['repo_requirements']['commit']:
+        grade_percent = course_config['labs'][lab_id]['repo_requirements']['commit']['grade_percent']
     else:
         grade_percent = None
 
@@ -823,7 +823,7 @@ def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
 
     # get commits and removing authored by teacher
     student_commits = [commit for commit in repo_commits
-                       if commit['author']['login'] not in settings.teacher_github_logins]
+                       if commit['author']['login'] not in course_config['github']['teachers']]
 
     if msg_part is not None:
         commits_with_prefix = [commit for commit in student_commits if msg_part in commit['commit']['message']]
