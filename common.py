@@ -698,7 +698,7 @@ def get_grading_points(log):
 
 
 #
-def get_repo_issues_grade_coefficient(repo: str, lab_id: str):
+def get_repo_issues_grade_coefficient(repo: str, lab_id: str, course_config={}):
     """
     get grade coefficient for provided repository and lab id by checking repository issues requirements
 
@@ -707,30 +707,30 @@ def get_repo_issues_grade_coefficient(repo: str, lab_id: str):
     :return: None or float coefficient (which can be 0.0)
     """
 
-    if "issue" not in settings.os_labs[lab_id]['repo_requirements']:
+    if "issue" not in course_config['labs'][lab_id]['repo_requirements']:
         return None
 
     # get prefix
-    if "prefix" in settings.os_labs[lab_id]['repo_requirements']['issue']:
-        prefix = settings.os_labs[lab_id]['repo_requirements']['issue']['prefix']
+    if "prefix" in course_config['labs'][lab_id]['repo_requirements']['issue']:
+        prefix = course_config['labs'][lab_id]['repo_requirements']['issue']['prefix']
     else:
         prefix = None
 
     # get linked commit message part
-    if "linked_commit_msg_part" in settings.os_labs[lab_id]['repo_requirements']['issue']:
-        linked_commit_msg_part = settings.os_labs[lab_id]['repo_requirements']['issue']['prefix']
+    if "linked_commit_msg_part" in course_config['labs'][lab_id]['repo_requirements']['issue']:
+        linked_commit_msg_part = course_config['labs'][lab_id]['repo_requirements']['issue']['prefix']
     else:
         linked_commit_msg_part = None
 
     # get issues min quantity from settings (mandatory)
-    if "min_quantity" in settings.os_labs[lab_id]['repo_requirements']['issue']:
-        min_quantity = settings.os_labs[lab_id]['repo_requirements']['issue']['min_quantity']
+    if "min_quantity" in course_config['labs'][lab_id]['repo_requirements']['issue']:
+        min_quantity = course_config['labs'][lab_id]['repo_requirements']['issue']['min_quantity']
     else:
         min_quantity = None
 
     # get grade percent from settings (mandatory)
-    if "grade_percent" in settings.os_labs[lab_id]['repo_requirements']['issue']:
-        grade_percent = settings.os_labs[lab_id]['repo_requirements']['issue']['grade_percent']
+    if "grade_percent" in course_config['labs'][lab_id]['repo_requirements']['issue']:
+        grade_percent = course_config['labs'][lab_id]['repo_requirements']['issue']['grade_percent']
     else:
         grade_percent = None
 
@@ -758,7 +758,7 @@ def get_repo_issues_grade_coefficient(repo: str, lab_id: str):
         # 2) "commit_id" field is not empty (contains SHA of the commit)
         # 3) provided repo name contains in commit URL
         student_commit_events_for_issue = [event for event in get_github_issue_referenced_events(repo, current_issue_number)
-                                           if event['actor']['login'] not in settings.teacher_github_logins
+                                           if event['actor']['login'] not in course_config['github']['teachers']
                                            and event['commit_id'] is not None
                                            and repo in event['commit_url']]
         if len(student_commit_events_for_issue) == 0:
@@ -784,7 +784,7 @@ def get_repo_issues_grade_coefficient(repo: str, lab_id: str):
 
 
 #
-def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
+def get_repo_commit_grade_coefficient(repo: str, lab_id: str, course_config={}):
     """
     get grade coefficient for provided repository and lab id by checking repository commits requirements
 
@@ -793,24 +793,30 @@ def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
     :return: None or float coefficient (which can be 0.0)
     """
 
-    if "commit" not in settings.os_labs[lab_id]['repo_requirements']:
+    if "commit" not in course_config['labs'][lab_id]['repo_requirements']:
         return None
 
     # get commit message part
-    if "msg_part" in settings.os_labs[lab_id]['repo_requirements']['commit']:
-        msg_part = settings.os_labs[lab_id]['repo_requirements']['commit']['msg_part']
+    if "msg_part" in course_config['labs'][lab_id]['repo_requirements']['commit']:
+        msg_part = course_config['labs'][lab_id]['repo_requirements']['commit']['msg_part']
     else:
         msg_part = None
 
-    # get issues min quantity from settings
-    if "min_quantity" in settings.os_labs[lab_id]['repo_requirements']['commit']:
-        min_quantity = settings.os_labs[lab_id]['repo_requirements']['commit']['min_quantity']
+    # get commit min quantity from settings
+    if "min_quantity" in course_config['labs'][lab_id]['repo_requirements']['commit']:
+        min_quantity = course_config['labs'][lab_id]['repo_requirements']['commit']['min_quantity']
     else:
         min_quantity = None
 
+    # get commit min quantity from shell
+    if "min_quantity_shell" in course_config['labs'][lab_id]['repo_requirements']['commit']:
+        min_quantity_shell = course_config['labs'][lab_id]['repo_requirements']['commit']['min_quantity_shell']
+    else:
+        min_quantity_shell = None
+
     # get grade percent
-    if "grade_percent" in settings.os_labs[lab_id]['repo_requirements']['commit']:
-        grade_percent = settings.os_labs[lab_id]['repo_requirements']['commit']['grade_percent']
+    if "grade_percent" in course_config['labs'][lab_id]['repo_requirements']['commit']:
+        grade_percent = course_config['labs'][lab_id]['repo_requirements']['commit']['grade_percent']
     else:
         grade_percent = None
 
@@ -823,7 +829,13 @@ def get_repo_commit_grade_coefficient(repo: str, lab_id: str):
 
     # get commits and removing authored by teacher
     student_commits = [commit for commit in repo_commits
-                       if commit['author']['login'] not in settings.teacher_github_logins]
+                       if commit['author']['login'] not in course_config['github']['teachers']]
+
+    if min_quantity_shell is not None:
+        student_shell_commits = [commit for commit in student_commits
+                       if commit['committer']['login'] != "web-flow"]
+        if len(student_shell_commits) <= min_quantity_shell:
+            return 0.0
 
     if msg_part is not None:
         commits_with_prefix = [commit for commit in student_commits if msg_part in commit['commit']['message']]

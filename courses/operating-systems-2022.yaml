@@ -36,6 +36,11 @@ course:
                 - report.pdf
             moss:
                 language: c
+            repo_requirements:
+                commit:
+                    min_quantity: 3
+                    min_quantity_shell: 1
+                    grade_percent: 20
         "1.1":
             github-prefix: os-task1-1
             short-name: ЛР1.1
@@ -129,11 +134,32 @@ course:
             moss:
                 language: cc
                 max-matches: 1000
+            repo_requirements:
+                commit:
+                    min_quantity: 3
+                    grade_percent: 15
+                issue:
+                    min_quantity: 3
+                    grade_percent: 15
         "7":
             github-prefix: os-task6
             short-name: ЛР6
             taskid-max: 30
             penalty-max: 7
+            repo_requirements: 
+                commit:
+                    min_quantity: 1
+                    grade_percent: 10
+                    msg_part: 'Lab6:'
+                issue:
+                    min_quantity: 1
+                    grade_percent: 10
+                    prefix: 'Lab6:'
+                    linked_commit_msg_part: 'Lab6:'
+
+# 'Lab6:' без изменений потому что необходимо переписывать README.MD
+
+# 'Lab6:' unchanged because it is necessary to rewrite README.MD
 
 misc:
     requests-timeout: 5

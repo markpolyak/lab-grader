@@ -231,12 +231,12 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
             grade_coefficient: float = 0.0
 
             # computing grade coefficient by commits
-            commit_grade_coefficient = common.get_repo_commit_grade_coefficient(repo, lab_id)
+            commit_grade_coefficient = common.get_repo_commit_grade_coefficient(repo, lab_id, course_config)
             if commit_grade_coefficient is not None:
                 grade_coefficient += commit_grade_coefficient
 
             # computing grade coefficient by issues
-            issues_grade_coefficient = common.get_repo_issues_grade_coefficient(repo, lab_id)
+            issues_grade_coefficient = common.get_repo_issues_grade_coefficient(repo, lab_id, course_config)
             if issues_grade_coefficient is not None:
                 grade_coefficient += issues_grade_coefficient
 
