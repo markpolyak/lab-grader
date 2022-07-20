@@ -129,13 +129,13 @@ course:
             moss:
                 language: cc
                 max-matches: 1000
-        repo_requirements:
-            commit:
-                min_quantity: 3
-                grade_percent: 15
-            issue:
-                min_quantity: 3
-                grade_percent: 15
+            repo_requirements:
+                commit:
+                    min_quantity: 3
+                    grade_percent: 15
+                issue:
+                    min_quantity: 3
+                    grade_percent: 15
         "7":
             github-prefix: os-task6
             short-name: ЛР6
