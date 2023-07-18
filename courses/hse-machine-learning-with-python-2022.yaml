@@ -55,12 +55,12 @@ course:
             github-prefix: hw3
             short-name: HW3
             taskid-max: 20
-            taskid-shift: 4
             penalty-max: 8
+            ignore-task-id: True
             ci:
                 - workflows
             files:
-                - lab2.cpp
+                - pandas_exercise.ipynb
             moss:
                 language: python
                 max-matches: 100

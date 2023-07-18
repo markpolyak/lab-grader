@@ -7,24 +7,24 @@ course:
         - OS
         - Операционные системы
         - ОС
-    semester: Spring 2022
+    semester: Spring 2023
     email: k43guap@ya.ru
     timezone: MSK
     github:
-        organization: suai-os-2022
+        organization: suai-os-2023
         teachers:
             - "Mark Polyak"
             - markpolyak
     google:
-        spreadsheet: 1oatZrefNtCwDVuXV7jCCjiCqOEgyA0LdTleRa-CNT2Q
+        spreadsheet: 15yVKYIUea6gj2wTWR1ndPzeGENDyBIxo1eHZDkRljUI
         info-sheet: График
         task-id-column: 0
         student-name-column: 1
         lab-column-offset: 1
     labs:
-        "1":
-            github-prefix: os-task1
-            short-name: ЛР1
+        "0":
+            github-prefix: os-task0
+            short-name: ЛР0
             penalty-max: 5
             ignore-task-id: True
             ci:
@@ -35,9 +35,9 @@ course:
                 - report.pdf
             moss:
                 language: c
-        "11":
-            github-prefix: os-task1-1
-            short-name: ЛР1.1
+        "01":
+            github-prefix: os-task-I-1
+            short-name: ЛР0.1
             taskid-max: 20
             penalty-max: 6
             # ignore-task-id: True
@@ -48,9 +48,9 @@ course:
             moss:
                 language: c
                 max-matches: 1000
-        "2":
-            github-prefix: os-task2
-            short-name: ЛР2
+        "1":
+            github-prefix: os-task1
+            short-name: ЛР1
             taskid-max: 20
             penalty-max: 6
             ci:
@@ -64,16 +64,17 @@ course:
                 additional:
                   - suai-os-2020
                   - suai-os-2021
+                  - suai-os-2022
                 basefiles:
                     - 
                         repo: k43guap/os-course-task1
                         filename: lab1.sh
-        "3":
-            github-prefix: os-task3
-            short-name: ЛР3
+        "2":
+            github-prefix: os-task2
+            short-name: ЛР2
             taskid-max: 20
             taskid-shift: 4
-            penalty-max: 8
+            penalty-max: 9
             ci:
                 - workflows
             files:
@@ -85,6 +86,7 @@ course:
                 additional:
                   - suai-os-2020
                   - suai-os-2021
+                  - suai-os-2022
                 basefiles:
                     - 
                         repo: k43guap/os-course-task2
@@ -92,11 +94,11 @@ course:
                     - 
                         repo: k43guap/os-course-task2
                         filename: examples/ex3.cpp
-        "4":
-            github-prefix: os-task4
-            short-name: ЛР4
+        "3":
+            github-prefix: os-task3
+            short-name: ЛР3
             taskid-max: 20
-            penalty-max: 8
+            penalty-max: 7
             ci:
                 - workflows
             files:
@@ -108,15 +110,16 @@ course:
                 additional:
                   - suai-os-2020
                   - suai-os-2021
+                  - suai-os-2022
                 basefiles:
                     - 
                         repo: k43guap/os-course-task3
                         filename: lab3.cpp
-        "5":
-            github-prefix: os-task5
-            short-name: ЛР5
+        "4":
+            github-prefix: os-task4
+            short-name: ЛР4
             taskid-max: 30
-            penalty-max: 10
+            penalty-max: 8
             ci:
                 - workflows
             files:
@@ -127,15 +130,16 @@ course:
                 local-path: lab4
                 additional:
                   - suai-os-2021
+                  - suai-os-2022
                 basefiles:
                     - 
                         repo: k43guap/os-course-task4
                         filename: lab4.cpp
-        "6":
-            github-prefix: os-task6
-            short-name: ЛР6
+        "5":
+            github-prefix: os-task5
+            short-name: ЛР5
             taskid-max: 30
-            penalty-max: 8
+            penalty-max: 10
             # ignore-completion-date: True
             ci:
               workflows:
@@ -150,9 +154,10 @@ course:
                 local-path: lab5
                 additional:
                   - suai-os-2021
-        "7":
-            github-prefix: os-task6
-            short-name: ЛР7
+                  - suai-os-2022
+        "6":
+            github-prefix: os-task5
+            short-name: ЛР6
             taskid-max: 30
             penalty-max: 7
             moss:
@@ -161,6 +166,7 @@ course:
                 local-path: lab5
                 additional:
                   - suai-os-2021
+                  - suai-os-2022
 
 misc:
     requests-timeout: 5

@@ -17,6 +17,7 @@ course:
     google:
         spreadsheet: 1LQ3o-03HVMvO9fVgFyiapjrnDNppuDfACbkhAOlcZgQ
         info-sheet: График
+        task-id-column: 0
     labs:
         "1":
             github-prefix: ms-task1
