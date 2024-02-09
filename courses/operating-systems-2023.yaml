@@ -9,7 +9,7 @@ course:
         - ОС
     semester: Spring 2023
     email: k43guap@ya.ru
-    timezone: MSK
+    timezone: UTC+3
     github:
         organization: suai-os-2023
         teachers:

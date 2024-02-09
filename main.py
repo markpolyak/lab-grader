@@ -261,7 +261,7 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                 if completion_date:
                     log = common.get_appveyor_log(repo)
             elif ci_service == 'travis':
-                completion_date = common.get_successfull_build_info(repo, ["Travis CI"]).get("completed_at")
+                completion_date = common.get_successfull_build_info(repo, ["Travis CI"])[0].get("completed_at")
                 if completion_date:
                     log = common.get_travis_log(repo, ["Travis CI"])
             elif ci_service == 'workflows':
@@ -272,11 +272,27 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                     ci_jobs = ["Autograding", "test", "build"]
                     logger.debug("No GitHub Actions jobs specified. Fall back to default %s", ci_jobs)
                 # ci_jobs = course_config['labs'][lab_id]['ci'][ci_service]
-                completion_date = common.get_successfull_build_info(
+                completion_date = None
+                task_id_from_logs = None
+                successfull_builds = common.get_successfull_build_info(
                     repo, ci_jobs, all_successfull=True
-                ).get("completed_at")
-                if completion_date:
-                    log = common.get_github_workflows_log(repo, ci_jobs)
+                )
+                for build_info in successfull_builds:
+                    # if not completion_date or completion_date < build_info.get("completed_at"):
+                    #     completion_date = build_info.get("completed_at")
+                    if build_info.get("completed_at"):
+                        log = common.get_github_workflows_log(repo, build_info)
+                        task_id_from_logs = common.get_task_id(log)
+                        print(f"{build_info.get('name')}, task_id_from_logs: {task_id_from_logs}")
+                        # print(log)
+                        if task_id_from_logs:
+                            break
+                completion_date = successfull_builds[0].get("completed_at") if len(successfull_builds) > 0 else None
+                # completion_date = common.get_successfull_build_info(
+                #     repo, ci_jobs, all_successfull=True
+                # ).get("completed_at")
+                # if completion_date:
+                #     log = common.get_latest_github_workflows_log(repo, ci_jobs)
             # TODO: add support for not using any CI/CD service at all, e.g.:
             elif ci_service == '':
                 # do something
@@ -299,8 +315,9 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                     student_task_id = -1
                     logger.debug("TASKID check is skipped")
                 # check TASKID from logs
-                if common.get_task_id(log) != student_task_id and not course_config['labs'][lab_id].get('ignore-task-id', False):
+                if task_id_from_logs != student_task_id and not course_config['labs'][lab_id].get('ignore-task-id', False):
                     spreadsheet.set_student_lab_status(student, lab_id_column, "?! Wrong TASKID!")
+                    logger.info("Wrong task id for student %s: found %s, but %s was expected", student, task_id_from_logs, student_task_id)
                     # print(common.get_task_id(log), student_task_id)
                     # print(log)
                 else:
@@ -346,6 +363,7 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
 def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
     """
     """
+    logger = logging.getLogger(__name__)
     # TODO: this is unfinished function
     prefix = course_config['labs'][lab_id]['github-prefix']
     # get a list of repositories
@@ -362,7 +380,7 @@ def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
     if moss_settings.get('directory'):
         moss.setDirectoryMode(moss_settings['directory'])
     for basefile in moss_settings.get('basefiles', []):
-        if isinstance(basefile, collections.Mapping):
+        if isinstance(basefile, collections.abc.Mapping):
             repo = basefile['repo']
             filename = basefile['filename']
             file_contents = common.github_get_file(repo, filename)
@@ -403,13 +421,10 @@ def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
             )
             # print(local_dir)
             # print(*repo.split('/'))
-            print(
-                "Downloading file '{}' from GitHub repo '{}' "
-                "to directory '{}'...".format(
-                    filename,
-                    repo,
-                    local_dir
-                )
+            logger.info(
+                "Downloading file '%s' from GitHub repo '%s' "
+                "to directory '%s'...",
+                filename, repo, local_dir
             )
             os.makedirs(local_dir, exist_ok=True)
             local_filename = os.path.join(local_dir, filename)
@@ -420,10 +435,24 @@ def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
                 f"{filename}_{dt:%Y-%m-%d}")
             moss.addFile(local_filename, display_name)
             file_count += 1
-    print(f"Total {file_count} files were downloaded. Sending them to MOSS...")
+    logger.info("Total %d files were downloaded", file_count)
+    # add predownloaded files, e.g. from previous years
+    file_count = 0
+    for additional_folder in moss_settings.get('additional', []):
+        for subdir, dirs, files in os.walk(os.path.join(local_path, additional_folder)):
+            for file_name in files:
+                local_filename = os.path.join(subdir, file_name)
+                logger.info("Processing additional file '%s'", local_filename)
+                github_repo = subdir.split('/')[-1]
+                github_account = github_repo.split('-')[-1] if github_repo else subdir
+                display_name = f"{lab_id}_{additional_folder}_{github_account}"
+                moss.addFile(local_filename, display_name)
+                file_count += 1
+    logger.info("Total %d local files were processed", file_count)
+    logger.info("Sending files to MOSS...")
     # send data to MOSS server
     url = moss.send()
-    print("Report URL: " + url)
+    logger.info("Report URL: %s", url)
     # Save report file
     submission_path = os.path.join(local_path, "submission")
     os.makedirs(submission_path, exist_ok=True)
@@ -567,8 +596,9 @@ def main():
     elif "moss" in params.update_action:
         # check labs
         for lab_id in params.labs:
+            local_path = config['course']['labs'][lab_id].get('moss', {}).get('local-path', "lab{}".format(lab_id))
             check_plagiarism(
-                lab_id, "lab{}".format(lab_id), 
+                lab_id, local_path, 
                 moss_user_id=config['auth']['moss']['user-id'],
                 course_config=config['course'])
 

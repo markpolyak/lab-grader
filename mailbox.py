@@ -183,12 +183,14 @@ def process_students(imap_conn, valid_subjects):
                 # normalize unicode string
                 # e.g. substitute non-breaking space ('\xa0')
                 # with normal space; see https://stackoverflow.com/a/34669482
-                name = unicodedata.normalize("NFKC", text_chunks[1])
+                # Also remove asterisks (*), because some stupid email clients use them for
+                # emphasized text in plain text mode
+                name = unicodedata.normalize("NFKC", text_chunks[1]).strip(',.*')
                 students.append({
                     'group': "'{}'".format(group),
                     'raw_group': text_chunks[0],
                     'name': name,
-                    'github': text_chunks[2].encode('ascii', 'ignore').decode("utf-8"),
+                    'github': text_chunks[2].encode('ascii', 'ignore').decode("utf-8").strip().strip('*'),
                     'email': msg['from'],
                     'uid': uid,
                     'email_subject': subject,

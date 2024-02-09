@@ -383,36 +383,50 @@ def get_github_issue_referenced_events(repo: str, issue_number: str):
 
 
 # 
-def get_successfull_build_info(repo, check_run_names, all_successfull=False):
+def get_successfull_build_info(repo: str, check_run_names: list, all_successfull: bool = False) -> list:
     """
-    get a most recent sccessfull build info from the specified list of checkruns
+    get successfull build info for the most recent commit from the specified list of check runs
     
     :param repo: repository name (with organization/owner prefix)
     :param check_run_names: list of check run names to be processed
     :param all_successfull: if `True`, all check runs from the `check_run_names` list must pass successfully
-    :return: a most recent checkrun from the `check_run_names` list or empty dict if `all_successfull` is `False` and at least one of check runs from the `check_run_names` has failed
+    :return: a list of successfull builds info for checkruns from the `check_run_names` list or empty list if `all_successfull` is `False` and at least one of check run from the `check_run_names` has failed
     """
     check_runs = get_github_check_runs(repo)
-    latest_check_run = {}
-    for check_run in check_runs:
-        if all_successfull and check_run.get("conclusion") != "success":
-            return {}
-        if (
-            any(name in check_run.get("name") for name in check_run_names)
-            and check_run.get("conclusion") == "success"
-            and check_run.get("completed_at", "") > latest_check_run.get("completed_at", "")
-        ):
-            # return check_run
-            latest_check_run = check_run
-    return latest_check_run
+    # expected_check_runs = [cr for cr in check_runs if cr.get("name") in check_run_names]
+    expected_check_runs = [cr for cr in check_runs if any(name in cr.get("name") for name in check_run_names)]
+    successfull_check_runs = [cr for cr in expected_check_runs if cr.get("conclusion") == "success"]
+    if all_successfull and len(expected_check_runs) != len(successfull_check_runs):
+        return []
+    return sorted(
+        successfull_check_runs,
+        key=lambda d: (
+            # cr.get("conclusion") != "success",  # successful builds first
+            d.get("completed_at") is not None,  # builds without completion timestamp last
+            d.get("completed_at", "").lower()   # sort by completion date
+        ),
+        reverse=True
+    )
+    # latest_check_run = {}
+    # for check_run in check_runs:
+    #     if all_successfull and check_run.get("conclusion") != "success":
+    #         return {}
+    #     if (
+    #         any(name in check_run.get("name") for name in check_run_names)
+    #         and check_run.get("conclusion") == "success"
+    #         and check_run.get("completed_at", "") > latest_check_run.get("completed_at", "")
+    #     ):
+    #         # return check_run
+    #         latest_check_run = check_run
+    # return latest_check_run
 
 
 #
-def get_github_workflows_log(repo, check_run_names):
+def get_github_workflows_log(repo, check_run_info):
     """
-    get log from github workflows
+    get logs for a github check run
 
-    :param repo: repository name (with organization/owner prefix)
+    :param check_run_info: information about a check run
     :return: log
     """
     # from observation of GitHub API output the 'id' parameter of a check run
@@ -430,7 +444,7 @@ def get_github_workflows_log(repo, check_run_names):
     # skipping several steps.
     # WARNING! This is undocumented by GitHub and
     # might stop working in the future
-    job_id = get_successfull_build_info(repo, check_run_names).get("id")
+    job_id = check_run_info.get("id")
     if not job_id:
         raise Exception("Unable to get job id from GitHub API check runs")
     workflows_headers = {
@@ -475,6 +489,19 @@ def get_github_workflows_log(repo, check_run_names):
             "Message is '{}' ({}).".format(
                 job_id, repo, res.reason, res.status_code))
     return res.content.decode('utf-8')
+
+
+#
+def get_latest_github_workflows_log(repo, check_run_names):
+    """
+    get latest log from github workflows
+
+    :param repo: repository name (with organization/owner prefix)
+    :param check_run_names: names of check runs to search for
+    :return: log
+    """
+    return get_github_workflows_log(repo, get_successfull_build_info(repo, check_run_names)[0])
+
 
 #
 def get_travis_log(repo, check_run_names):
@@ -621,7 +648,7 @@ def get_appveyor_log(repo):
 def get_task_id(log):
     task_id_str = "TASKID is"
     i = log.find(task_id_str)
-    # skip all occurences that start with a comma, 
+    # skip all occurences that start with a quote, 
     # e.g. from source code like `echo "TASKID is ..."`,
     # which is echoed to the log before being executed
     while i > 0 and (log[i-1] == '"' or log[i-1] == "'"):
@@ -630,10 +657,13 @@ def get_task_id(log):
         return None
     i += len(task_id_str) + 1
     try:
-        task_id = int(log[i:i+2].strip())
+        if log[i+1:i+2].isdigit():
+            task_id = int(log[i:i+2].strip())
+        else:
+            task_id = int(log[i:i+1].strip())
     except ValueError as e:
         print(e)
-        task_id = -1
+        task_id = None
     return task_id
 
 
