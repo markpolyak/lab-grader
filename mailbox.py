@@ -161,15 +161,10 @@ def process_students(imap_conn, valid_subjects):
             )
             # drop blank lines
             text_chunks = [chunk for chunk in chunks if chunk]
-            text = '\n'.join(text_chunks)
-            # print(text)
-            if len(text_chunks) >= 3:
-                # print("Group: {}".format(text_chunks[0]))
-                # print("Name: {}".format(text_chunks[1]))
-                # print("Repo name: {}".format(text_chunks[2]))
+            text_cleaned = '\n'.join(text_chunks)
+            group = raw_group = name = github_username = None
+            if len(text_chunks) >= 1:
                 logger.debug("Group: %s", text_chunks[0])
-                logger.debug("Name: %s", text_chunks[1])
-                logger.debug("Repo name: %s", text_chunks[2])
                 # make uppercase and
                 # swap all valid non-numeric characters to english
                 group = (text_chunks[0]
@@ -180,29 +175,32 @@ def process_students(imap_conn, valid_subjects):
                          .replace('К', 'K'))
                 # remove all invalid characters
                 group = ''.join([c for c in group if c in '0123456789MVZK'])
-                # normalize unicode string
-                # e.g. substitute non-breaking space ('\xa0')
-                # with normal space; see https://stackoverflow.com/a/34669482
-                # Also remove asterisks (*), because some stupid email clients use them for
-                # emphasized text in plain text mode
-                name = unicodedata.normalize("NFKC", text_chunks[1]).strip(',.*')
-                students.append({
-                    'group': "'{}'".format(group),
-                    'raw_group': text_chunks[0],
-                    'name': name,
-                    'github': text_chunks[2].encode('ascii', 'ignore').decode("utf-8").strip().strip('*'),
-                    'email': msg['from'],
-                    'uid': uid,
-                    'email_subject': subject,
-                    'email_timestamp': email_timestamp
-                })
-            else:
+                raw_group = text_chunks[0]
+            if len(text_chunks) >= 2:
+                logger.debug("Name: %s", text_chunks[1])
+                name = unicodedata.normalize("NFKC", text_chunks[1]).strip(',.*')                
+            if len(text_chunks) >= 3:
+                logger.debug("Repo name: %s", text_chunks[2])
+                github_username = text_chunks[2].encode('ascii', 'ignore').decode("utf-8").strip().strip('*')
+            if len(text_chunks) < 3:
                 # print(
                 logger.error(
                     "Error! Unable to parse email body. "
-                    "There should be at least 3 lines of text in the email.")
-        # print(msg.keys())
-        # print("")
+                    "There should be at least 3 lines of text in the email."
+                )
+                logger.debug(
+                    f"Raw message body: {simplest}. HTML text: {text}. Parsed body: {text_cleaned}."
+                )
+            students.append({
+                'group': "'{}'".format(group),
+                'raw_group': raw_group,
+                'name': name,
+                'github': github_username,
+                'email': msg['from'],
+                'uid': uid,
+                'email_subject': subject,
+                'email_timestamp': email_timestamp
+            })
     return students
 
 
