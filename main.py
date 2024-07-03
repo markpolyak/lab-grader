@@ -269,9 +269,10 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                     ci_jobs = course_config['labs'][lab_id]['ci'].get(ci_service)
                 except (AttributeError, TypeError): 
                     # AttributeError in case there is no .get method and TypeError in case get is not callable
-                    ci_jobs = ["Autograding", "test", "build"]
+                    ci_jobs = ["run-autograding-tests", "test", "build", "Autograding"]
                     logger.debug("No GitHub Actions jobs specified. Fall back to default %s", ci_jobs)
                 # ci_jobs = course_config['labs'][lab_id]['ci'][ci_service]
+                logger.debug(f"Looking for the following GitHub Actions successfull completion: {ci_jobs}")
                 completion_date = None
                 task_id_from_logs = None
                 successfull_builds = common.get_successfull_build_info(
