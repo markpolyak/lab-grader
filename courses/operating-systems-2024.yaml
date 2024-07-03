@@ -21,6 +21,13 @@ course:
         task-id-column: 0
         student-name-column: 1
         lab-column-offset: 1
+    staff:
+        - name: Поляк Марк Дмитриевич
+          title: ст. преп.
+          status: лектор
+        - name: Поляк Марк Дмитриевич
+          title: ст. преп.
+          status: лабораторные работы
     labs:
         "0":
             github-prefix: os-task0
