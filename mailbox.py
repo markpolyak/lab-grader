@@ -188,7 +188,7 @@ def process_students(imap_conn, valid_subjects):
                     "Error! Unable to parse email body. "
                     "There should be at least 3 lines of text in the email."
                 )
-                logger.debug(
+                logger.error(
                     f"Raw message body: {simplest}. HTML text: {text}. Parsed body: {text_cleaned}."
                 )
             students.append({
