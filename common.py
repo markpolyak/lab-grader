@@ -6,7 +6,7 @@ from requests.packages.urllib3.util.retry import Retry
 
 import json
 import datetime
-from oauth2client.service_account import ServiceAccountCredentials
+#from oauth2client.service_account import ServiceAccountCredentials
 # import gspread
 import settings
 
