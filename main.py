@@ -338,7 +338,10 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
                     # calculate deadline penalty
                     student_dt = isoparse(completion_date)
                     penalty_suffix = ""
-                    if student_dt > deadlines[student['group']]:
+                    if not deadlines[student['group']]:
+                        # deadline is not set
+                        logger.error("Missing deadline for lab %s, group %s", lab_id, student['group'])
+                    elif student_dt > deadlines[student['group']]:
                         overdue = student_dt - deadlines[student['group']]
                         penalty = math.ceil((overdue.days + overdue.seconds / 86400) / 7)
                         # TODO: check that penalty does not exceed maximum grade points for that lab
