@@ -11,6 +11,7 @@ from google.oauth2 import service_account
 # We need write access to the spreadsheet: https://developers.google.com/sheets/api/guides/authorizing
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
+
 class GoogleSheet:
     # spreadsheet = None
     # sheets = None
@@ -177,7 +178,10 @@ class GoogleSheet:
         if dimension != 'COLUMNS':
             raise ValueError("Not implemented! Only 'COLUMNS' dimension value is supported at the moment.")
         if student['group'] not in self.data:
-            raise ValueError("Group '{}' not found in spreadsheet! Available groups are: {}. Check your spelling or contact course staff if you don't see your group listed.".format(student['group'], list(self.data.keys())))
+            if "'{}'".format(student.get('raw_group')) not in self.data:
+                raise ValueError("Group '{}' not found in spreadsheet! Available groups are: {}. Check your spelling or contact course staff if you don't see your group listed.".format(student['group'], list(self.data.keys())))
+            else:
+                student['group'] = "'{}'".format(student['raw_group'])
         if 'name' in student and searchby == 'name':
             try:
                 position = self.data[student['group']][self.student_name_column].index(student['name'])

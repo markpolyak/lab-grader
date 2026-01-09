@@ -19,6 +19,8 @@ import collections
 
 import mosspy
 from mossum import mossum
+import nbformat
+from nbconvert import PythonExporter
 
 
 # setup logging
@@ -364,6 +366,41 @@ def check_lab(lab_id, groups, spreadsheet, course_config={}):
     return spreadsheet.data_update
 
 
+def convert_ipynb_to_py(ipynb_path, check_existing=False):
+    """
+    Converts a Jupyter Notebook (.ipynb) file to a Python (.py) script.
+
+    Parameters:
+        ipynb_path (str): Path to the .ipynb file.
+        check_existing (bool): If True, return existing .py file path if it exists.
+                               If False (default), always convert the notebook.
+
+    Returns:
+        str: Path to the .py file.
+    """
+    if not ipynb_path.endswith(".ipynb"):
+        raise ValueError("Input file must be a .ipynb file")
+
+    py_path = os.path.splitext(ipynb_path)[0] + ".py"
+
+    if check_existing and os.path.exists(py_path):
+        return py_path
+
+    # Load the notebook content
+    with open(ipynb_path, 'r', encoding='utf-8') as f:
+        notebook = nbformat.read(f, as_version=4)
+
+    # Convert using PythonExporter
+    exporter = PythonExporter()
+    python_code, _ = exporter.from_notebook_node(notebook)
+
+    # Write to .py file
+    with open(py_path, 'w', encoding='utf-8') as f:
+        f.write(python_code)
+
+    return py_path
+
+
 def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
     """
     """
@@ -434,6 +471,8 @@ def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
             local_filename = os.path.join(local_dir, filename)
             with open(local_filename, "wb") as f:
                 f.write(file_contents)
+            if local_filename.endswith(".ipynb"):
+                local_filename = convert_ipynb_to_py(local_filename)
             dt = common.github_get_latest_commit_date(repo)
             display_name = (f"{lab_id}_{github_account}_"
                 f"{filename}_{dt:%Y-%m-%d}")
@@ -446,6 +485,8 @@ def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
         for subdir, dirs, files in os.walk(os.path.join(local_path, additional_folder)):
             for file_name in files:
                 local_filename = os.path.join(subdir, file_name)
+                if local_filename.endswith(".ipynb"):
+                    local_filename = convert_ipynb_to_py(local_filename, check_existing=True)
                 logger.info("Processing additional file '%s'", local_filename)
                 github_repo = subdir.split('/')[-1]
                 github_account = github_repo.split('-')[-1] if github_repo else subdir
@@ -469,7 +510,7 @@ def check_plagiarism(lab_id, local_path, moss_user_id, course_config={}):
     mosspy.download_report(
         url,
         report_dir,
-        connections=8,
+        connections=4, # количество потоков для загрузки отчета (0 - без ограничений)
         log_level=logging.DEBUG
     )
     with open(os.path.join(report_dir, "_link.txt"), 'w') as f:

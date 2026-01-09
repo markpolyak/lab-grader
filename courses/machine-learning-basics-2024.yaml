@@ -1,0 +1,104 @@
+---
+# Configuration file for lab-grader
+
+course:
+    name: Machine Learning
+    alt-names: 
+        - ML
+        - Машинное обучение
+        - МО
+        - Machine learning basics
+        - MLB
+        - Основы машинного обучения
+        - ОМО
+    semester: Fall 2024
+    email: k43guap@ya.ru
+    timezone: UTC+3
+    github:
+        organization: suai-mlb-2024
+        teachers:
+            - "Mark Polyak"
+            - markpolyak
+    google:
+        spreadsheet: 1Hxo1V11aX3EyoLfa_4yTtVCklmH7JudiVyQB2iMvOUo
+        info-sheet: График
+        task-id-column: 0
+        student-name-column: 1
+        lab-column-offset: 1
+    staff:
+        - name: Поляк Марк Дмитриевич
+          title: ст. преп.
+          status: лектор
+        - name: Поляк Марк Дмитриевич
+          title: ст. преп.
+          status: лабораторные работы
+    labs:
+        "1":
+            github-prefix: mlb-task1
+            short-name: ЛР1
+            taskid-max: 25
+            penalty-max: 12
+            ignore-task-id: True
+            ci:
+                - workflows
+            files:
+                - jupyter_assignment.ipynb
+                - matplotlib_assignment.ipynb
+                - pandas_exercise.ipynb
+            moss:
+                language: python
+                max-matches: 1000
+                local-path: lab1
+                additional:
+                  - hse-mlwp-2022
+#                basefiles:
+#                    - 
+#                        repo: k43guap/os-course-task1
+#                        filename: lab1.sh
+            report:
+                - Цель работы
+                - Индивидуальное задание
+                - Описание входных данных
+                - Результат выполнения работы
+                - Исходный код программы с комментариями
+                - Выводы
+        "2":
+            github-prefix: mlb-task2
+            short-name: ЛР2
+            taskid-max: 20
+            penalty-max: 9
+            ci:
+                - workflows
+            files:
+                - regression_assignment.ipynb
+            moss:
+                language: python
+                max-matches: 1000
+                local-path: lab2
+            report:
+                - Цель работы
+                - Задание на лабораторную работу
+                - Результат выполнения работы
+                - Выводы
+        "3":
+            github-prefix: mlb-task3
+            short-name: ЛР3
+            taskid-max: 20
+            penalty-max: 7
+            ci:
+                - workflows
+            files:
+                - classification_assignment.ipynb
+            moss:
+                language: python
+                max-matches: 1000
+                local-path: lab3
+            report:
+                - Цель работы
+                - Задание на лабораторную работу
+                - Результат выполнения работы
+                - Выводы
+misc:
+    requests-timeout: 5
+    
+    

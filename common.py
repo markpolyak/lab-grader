@@ -393,6 +393,7 @@ def get_successfull_build_info(repo: str, check_run_names: list, all_successfull
     :return: a list of successfull builds info for checkruns from the `check_run_names` list or empty list if `all_successfull` is `False` and at least one of check run from the `check_run_names` has failed
     """
     check_runs = get_github_check_runs(repo)
+    # print(f"Found check runs: {[cr.get('name') for cr in check_runs]}")
     # expected_check_runs = [cr for cr in check_runs if cr.get("name") in check_run_names]
     expected_check_runs = [cr for cr in check_runs if any(name in cr.get("name") for name in check_run_names)]
     successfull_check_runs = [cr for cr in expected_check_runs if cr.get("conclusion") == "success"]

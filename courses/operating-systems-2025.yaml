@@ -7,16 +7,16 @@ course:
         - OS
         - Операционные системы
         - ОС
-    semester: Fall 2024
+    semester: Spring 2025
     email: k43guap@ya.ru
     timezone: UTC+3
     github:
-        organization: suai-os-2024f
+        organization: suai-os-2025
         teachers:
             - "Mark Polyak"
             - markpolyak
     google:
-        spreadsheet: 1lgwe2QuLoNdGnq-c3lZvl2frUI0s_TPtSdS6kCwjPI0
+        spreadsheet: 1BoVLNZpP6zSc7DPSVkbxaQ_oJZcZ_f-zyMCfF1gw-PM
         info-sheet: График
         task-id-column: 0
         student-name-column: 1
@@ -45,6 +45,11 @@ course:
             report:
                 - Задание
                 - Результат
+            validation:
+                commits:
+                    -
+                        filter: console
+                        min-count: 1
         "01":
             github-prefix: os-task-I-1
             short-name: ЛР0.1
@@ -83,6 +88,7 @@ course:
                   - suai-os-2022
                   - suai-os-2023
                   - suai-os-2024
+                  - suai-os-2024f
                 basefiles:
                     - 
                         repo: k43guap/os-course-task1
@@ -114,6 +120,7 @@ course:
                   - suai-os-2022
                   - suai-os-2023
                   - suai-os-2024
+                  - suai-os-2024f
                 basefiles:
                     - 
                         repo: k43guap/os-course-task2
@@ -147,6 +154,7 @@ course:
                   - suai-os-2022
                   - suai-os-2023
                   - suai-os-2024
+                  - suai-os-2024f
                 basefiles:
                     - 
                         repo: k43guap/os-course-task3
@@ -176,6 +184,7 @@ course:
                   - suai-os-2022
                   - suai-os-2023
                   - suai-os-2024
+                  - suai-os-2024f
                 basefiles:
                     - 
                         repo: k43guap/os-course-task4
@@ -209,6 +218,7 @@ course:
                   - suai-os-2022
                   - suai-os-2023
                   - suai-os-2024
+                  - suai-os-2024f
             report:
                 - Цель работы
                 - Задание на лабораторную работу
@@ -216,6 +226,17 @@ course:
                 - Результат выполнения работы
                 - Исходный код программы с комментариями
                 - Выводы
+            validation:
+                commits:
+                    -
+                        filter: message
+                        contains: lab5
+                        min-count: 3
+                issues:
+                    -
+                        filter: message
+                        contains: lab5
+                        min-count: 3
         "6":
             github-prefix: os-task5
             short-name: ЛР6
@@ -230,6 +251,7 @@ course:
                   - suai-os-2022
                   - suai-os-2023
                   - suai-os-2024
+                  - suai-os-2024f
             report:
                 - Цель работы
                 - Задание на лабораторную работу
@@ -238,6 +260,17 @@ course:
                 - Логи сборки проекта в облаке
                 - Исходный код тестов
                 - Выводы
+            validation:
+                commits:
+                    -
+                        filter: message
+                        contains: lab6
+                        min-count: 3
+                issues:
+                    -
+                        filter: message
+                        contains: lab6
+                        min-count: 3
 misc:
     requests-timeout: 5
     

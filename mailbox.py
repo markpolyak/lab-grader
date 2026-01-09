@@ -18,6 +18,17 @@ import datetime
 # import html2text
 from bs4 import BeautifulSoup
 
+
+def normalize_group_name(raw_group: str):
+    # make uppercase and
+    # swap all valid non-numeric characters to english
+    return (raw_group.upper()
+             .replace('М', 'M')
+             .replace('В', 'V')
+             .replace('З', 'Z')
+             .replace('К', 'K')
+         )
+
 # import settings
 
 # EMAIL_ACCOUNT = ""
@@ -167,12 +178,13 @@ def process_students(imap_conn, valid_subjects):
                 logger.debug("Group: %s", text_chunks[0])
                 # make uppercase and
                 # swap all valid non-numeric characters to english
-                group = (text_chunks[0]
-                         .upper()
-                         .replace('М', 'M')
-                         .replace('В', 'V')
-                         .replace('З', 'Z')
-                         .replace('К', 'K'))
+                group = normalize_group_name(text_chunks[0])
+#                group = (text_chunks[0]
+#                         .upper()
+#                         .replace('М', 'M')
+#                         .replace('В', 'V')
+#                         .replace('З', 'Z')
+#                         .replace('К', 'K'))
                 # remove all invalid characters
                 group = ''.join([c for c in group if c in '0123456789MVZK'])
                 raw_group = text_chunks[0]
